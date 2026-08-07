@@ -214,7 +214,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '8px', fontSize: '12px', color: '#fff' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute text-center">
