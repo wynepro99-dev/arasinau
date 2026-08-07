@@ -100,17 +100,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     <div className="w-full max-w-md mx-auto bg-white border border-slate-200/80 rounded-3xl shadow-2xl overflow-hidden text-slate-900 animate-scale-in">
       
       {/* Brand Top Header */}
-      <div className="p-6 pb-5 text-center bg-gradient-to-b from-indigo-50/70 to-white border-b border-slate-100 relative">
+      <div className="p-4 sm:p-6 pb-4 sm:pb-5 text-center bg-gradient-to-b from-indigo-50/70 to-white border-b border-slate-100 relative">
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 sm:w-5 h-4 sm:h-5" />
           </button>
         )}
 
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 p-1 mx-auto mb-3 shadow-lg shadow-indigo-600/20 flex items-center justify-center">
+        <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 p-1 mx-auto mb-2 sm:mb-3 shadow-lg shadow-indigo-600/20 flex items-center justify-center">
           {!logoError ? (
             <img 
               src={LOGO_URL} 
@@ -119,12 +119,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               className="w-full h-full object-contain rounded-xl bg-white p-1"
             />
           ) : (
-            <span className="text-white font-black text-xl">ARA</span>
+            <span className="text-white font-black text-lg sm:text-xl">ARA</span>
           )}
         </div>
 
-        <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Ara Sinau</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Sistem Portal Ujian & Evaluasi Online Terpadu</p>
+        <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Ara Sinau</h2>
+        <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Sistem Portal Ujian & Evaluasi</p>
       </div>
 
       {/* Mode Switcher Tabs */}
@@ -200,9 +200,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             <button
               type="submit"
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center space-x-2 active:scale-98"
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-lg shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center space-x-2 active:scale-98"
             >
-              <span>Masuk ke Ara Sinau</span>
+              <span>Masuk Sistem</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>

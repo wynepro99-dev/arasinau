@@ -306,20 +306,22 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     <div className="space-y-6 animate-fade-in">
       
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200/80 p-6 rounded-2xl shadow-sm print:hidden">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight flex items-center space-x-2">
-            <span>Rekap & Evaluasi Nilai Ujian</span>
-            <span className="px-2.5 py-0.5 text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full">
-              Kalkulasi Otomatis
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200/80 p-4 sm:p-6 rounded-2xl shadow-sm print:hidden">
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+            <h1 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+              Rekap & Evaluasi Nilai Ujian
+            </h1>
+            <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-purple-100 text-purple-600 border border-purple-300 rounded-full uppercase tracking-wider whitespace-nowrap w-fit">
+              ⚙ Kalkulasi Otomatis
             </span>
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          </div>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
             Laporan hasil pengerjaan real-time, transparansi penilaian instan, dan riwayat kelulusan per individu.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 shrink-0">
           {attempts.length > 0 && (
             <button
               onClick={() => {
@@ -332,7 +334,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
               className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Hapus Semua Nilai</span>
+              <span>Hapus</span>
             </button>
           )}
           <button

@@ -83,33 +83,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className="space-y-6 animate-fade-in">
       
       {/* Welcome & Quick Action Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200/80 p-6 rounded-2xl shadow-sm">
-        <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight flex items-center space-x-2">
-            <span>Ringkasan Aktivitas Ujian</span>
-            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200/60 rounded-full uppercase tracking-wider">
-              Live Realtime
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200/80 p-4 sm:p-6 rounded-2xl shadow-sm">
+        <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+            <h1 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+              Ringkasan Aktivitas Ujian
+            </h1>
+            <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-blue-100 text-blue-600 border border-blue-300 rounded-full uppercase tracking-wider whitespace-nowrap">
+              ● Live Realtime
             </span>
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          </div>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
             Pantau kinerja ujian, statistik kelulusan departemen, dan rekapitulasi nilai otomatis.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => onNavigateTab('scores')}
             className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all flex items-center space-x-2"
           >
             <Award className="w-4 h-4 text-indigo-600" />
-            <span>Lihat Laporan Skor</span>
+            <span>Laporan Skor</span>
           </button>
           <button
             onClick={onOpenCreateExam}
             className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Buat Ujian Baru</span>
+            <span>Buat Ujian</span>
           </button>
         </div>
       </div>

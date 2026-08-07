@@ -55,41 +55,39 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     <div className="space-y-6 animate-fade-in">
       
       {/* Welcome & Personal Stats Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-emerald-950/40 border border-slate-800 p-6 rounded-2xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-600/30 text-indigo-300 border-2 border-indigo-500/40 shadow-lg flex items-center justify-center font-bold text-lg shrink-0">
-              {currentUser.name.substring(0, 2).toUpperCase()}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-emerald-950/40 border border-slate-800 p-4 sm:p-6 rounded-2xl space-y-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-2xl bg-indigo-600/30 text-indigo-300 border-2 border-indigo-500/40 shadow-lg flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
+            {currentUser.name.substring(0, 2).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+              <h1 className="text-base sm:text-xl font-bold text-white tracking-tight truncate">Selamat Datang, {currentUser.name}</h1>
+              <span className="px-2 py-0.5 text-[9px] sm:text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full uppercase whitespace-nowrap w-fit">
+                {currentUser.department}
+              </span>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold text-white tracking-tight">Selamat Datang, {currentUser.name}</h1>
-                <span className="px-2.5 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full uppercase">
-                  {currentUser.department}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Portal Ujian Karyawan & Evaluasi Kompetensi Perusahaan
-              </p>
-            </div>
+            <p className="text-xs text-slate-400">
+              Portal Ujian Karyawan & Evaluasi Kompetensi
+            </p>
+          </div>
+        </div>
+
+        {/* Stat Cards - Responsive Grid */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="bg-slate-900/80 border border-slate-800 p-2.5 sm:p-4 rounded-lg text-center">
+            <div className="text-slate-400 text-[8px] sm:text-[10px] font-semibold uppercase">Selesai</div>
+            <div className="text-lg sm:text-2xl font-black text-white mt-1 sm:mt-2">{totalTaken}</div>
           </div>
 
-          {/* Stat Badges */}
-          <div className="flex items-center space-x-3 text-xs">
-            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center min-w-[100px]">
-              <div className="text-slate-400 text-[10px]">Ujian Selesai</div>
-              <div className="text-lg font-black text-white mt-0.5">{totalTaken}</div>
-            </div>
+          <div className="bg-slate-900/80 border border-slate-800 p-2.5 sm:p-4 rounded-lg text-center">
+            <div className="text-slate-400 text-[8px] sm:text-[10px] font-semibold uppercase">Rata-rata</div>
+            <div className="text-lg sm:text-2xl font-black text-emerald-400 mt-1 sm:mt-2">{myAvgScore}</div>
+          </div>
 
-            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center min-w-[100px]">
-              <div className="text-slate-400 text-[10px]">Rata-rata Skor</div>
-              <div className="text-lg font-black text-emerald-400 mt-0.5">{myAvgScore}</div>
-            </div>
-
-            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl text-center min-w-[100px]">
-              <div className="text-slate-400 text-[10px]">Total Lulus</div>
-              <div className="text-lg font-black text-teal-400 mt-0.5">{passedCount}</div>
-            </div>
+          <div className="bg-slate-900/80 border border-slate-800 p-2.5 sm:p-4 rounded-lg text-center">
+            <div className="text-slate-400 text-[8px] sm:text-[10px] font-semibold uppercase">Lulus</div>
+            <div className="text-lg sm:text-2xl font-black text-teal-400 mt-1 sm:mt-2">{passedCount}</div>
           </div>
         </div>
       </div>
