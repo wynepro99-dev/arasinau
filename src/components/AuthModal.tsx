@@ -90,21 +90,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleQuickDemo = (user: User) => {
-    onLoginSuccess(user);
-    onToast(`Masuk sebagai: ${user.name}`, 'success');
-    if (onClose) onClose();
-  };
-
   const content = (
-    <div className="w-full max-w-md mx-auto bg-white border border-slate-200/80 rounded-3xl shadow-2xl overflow-hidden text-slate-900 animate-scale-in">
+    <div className="w-full max-w-md mx-auto bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-150 animate-scale-in">
       
       {/* Brand Top Header */}
-      <div className="p-4 sm:p-6 pb-4 sm:pb-5 text-center bg-gradient-to-b from-indigo-50/70 to-white border-b border-slate-100 relative">
+      <div className="p-4 sm:p-6 pb-4 sm:pb-5 text-center bg-gradient-to-b from-indigo-50/70 to-white dark:from-zinc-800/40 dark:to-zinc-900 border-b border-slate-100 dark:border-zinc-800 relative">
         {onClose && (
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition-colors"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-4 sm:w-5 h-4 sm:h-5" />
           </button>
@@ -116,25 +110,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               src={LOGO_URL} 
               alt="Ara Sinau Logo" 
               onError={() => setLogoError(true)}
-              className="w-full h-full object-contain rounded-xl bg-white p-1"
+              className="w-full h-full object-contain rounded-xl bg-white dark:bg-zinc-800 p-1"
             />
           ) : (
             <span className="text-white font-black text-lg sm:text-xl">ARA</span>
           )}
         </div>
 
-        <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Ara Sinau</h2>
-        <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Sistem Portal Ujian & Evaluasi</p>
+        <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">Ara Sinau</h2>
+        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 mt-1">Sistem Portal Ujian & Evaluasi</p>
       </div>
 
       {/* Mode Switcher Tabs */}
-      <div className="flex border-b border-slate-100 bg-white">
+      <div className="flex border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
         <button
           onClick={() => setMode('login')}
           className={`flex-1 py-3 text-xs font-bold text-center transition-all border-b-2 ${
             mode === 'login'
-              ? 'border-indigo-600 text-indigo-600 bg-indigo-50/30'
-              : 'border-transparent text-slate-400 hover:text-slate-600'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/30 dark:bg-indigo-950/20'
+              : 'border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300'
           }`}
         >
           Masuk Email
@@ -143,8 +137,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           onClick={() => setMode('register')}
           className={`flex-1 py-3 text-xs font-bold text-center transition-all border-b-2 ${
             mode === 'register'
-              ? 'border-indigo-600 text-indigo-600 bg-indigo-50/30'
-              : 'border-transparent text-slate-400 hover:text-slate-600'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/30 dark:bg-indigo-950/20'
+              : 'border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300'
           }`}
         >
           Daftar Akun
@@ -156,22 +150,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {mode === 'login' ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Pilih Personel / Pengguna</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Pilih Personel / Pengguna</label>
 
               <select
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full mb-2 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500"
+                className="w-full mb-2 px-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               >
-                <option value="">-- Pilih Akun Personel ({allUsers.length}) --</option>
+                <option value="" className="dark:bg-zinc-900">-- Pilih Akun Personel ({allUsers.length}) --</option>
                 {allUsers.map((u) => (
-                  <option key={u.id} value={u.email}>
+                  <option key={u.id} value={u.email} className="dark:bg-zinc-900">
                     {u.name} • {u.department}
                   </option>
                 ))}
               </select>
 
-              <label className="block text-xs font-bold text-slate-700 mb-1">Atau Ketik Email / Nama</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Atau Ketik Email / Nama</label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
@@ -179,13 +173,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="Ketik email atau nama..."
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 transition-all font-medium"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Kata Sandi</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Kata Sandi</label>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
@@ -193,14 +187,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 transition-all font-medium"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-lg shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center space-x-2 active:scale-98"
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center space-x-2 active:scale-98"
             >
               <span>Masuk Sistem</span>
               <ArrowRight className="w-4 h-4" />
@@ -209,7 +203,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         ) : (
           <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Nama Lengkap</label>
               <div className="relative">
                 <UserIcon className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
@@ -217,14 +211,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="Nama Lengkap Karyawan"
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all font-medium"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Email Perusahaan</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Email Perusahaan</label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
@@ -232,7 +226,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="karyawan@perusahaan.id"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 transition-all font-medium"
                   required
                 />
               </div>
@@ -240,29 +234,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Akses Sistem</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Akses Sistem</label>
                 <select
                   value={regRole}
                   onChange={(e) => setRegRole(e.target.value as UserRole)}
-                  className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500"
+                  className="w-full py-2.5 px-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="karyawan">Peserta / Pengerja Ujian</option>
-                  <option value="admin">Pembuat Soal / Evaluator</option>
+                  <option value="karyawan" className="dark:bg-zinc-900">Peserta / Pengerja Ujian</option>
+                  <option value="admin" className="dark:bg-zinc-900">Pembuat Soal / Evaluator</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Departemen</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Departemen</label>
                 <select
                   value={regDepartment}
                   onChange={(e) => setRegDepartment(e.target.value)}
-                  className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-indigo-500"
+                  className="w-full py-2.5 px-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="IT & Technology">IT & Tech</option>
-                  <option value="Human Resources">HRD</option>
-                  <option value="Operations & Logistics">Operations</option>
-                  <option value="Marketing & Sales">Marketing</option>
-                  <option value="Finance & Accounting">Finance</option>
+                  <option value="IT & Technology" className="dark:bg-zinc-900">IT & Tech</option>
+                  <option value="Human Resources" className="dark:bg-zinc-900">HRD</option>
+                  <option value="Operations & Logistics" className="dark:bg-zinc-900">Operations</option>
+                  <option value="Marketing & Sales" className="dark:bg-zinc-900">Marketing</option>
+                  <option value="Finance & Accounting" className="dark:bg-zinc-900">Finance</option>
                 </select>
               </div>
             </div>
@@ -290,9 +284,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md animate-fade-in">
       {content}
     </div>
   );
 };
-

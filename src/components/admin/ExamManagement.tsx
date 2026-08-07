@@ -144,13 +144,13 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-zinc-200">
       
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200/80 p-6 rounded-2xl shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-6 rounded-2xl shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">Manajemen Paket Ujian & Bank Soal</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Manajemen Paket Ujian & Bank Soal</h1>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
             Buat paket ujian baru, atur durasi & passing grade, serta tambahkan pilihan ganda / soal AI.
           </p>
         </div>
@@ -165,7 +165,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                   onRefresh();
                 }
               }}
-              className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5"
+              className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold border border-transparent dark:border-rose-900/40 transition-all flex items-center space-x-1.5"
             >
               <Trash2 className="w-4 h-4" />
               <span>Hapus Semua Paket Ujian</span>
@@ -173,7 +173,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
           )}
           <button
             onClick={handleOpenCreateModal}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center space-x-2 shrink-0"
+            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 dark:shadow-none transition-all flex items-center justify-center space-x-2 shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Buat Paket Ujian Baru</span>
@@ -190,18 +190,18 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
             placeholder="Cari judul ujian atau deskripsi..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-xl text-xs text-slate-800 dark:text-zinc-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
           />
         </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 bg-white border border-slate-200/80 rounded-xl text-xs text-slate-700 focus:outline-none focus:border-indigo-500 shadow-sm min-w-[180px]"
+          className="px-3 py-2 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-xl text-xs text-slate-700 dark:text-zinc-200 focus:outline-none focus:border-indigo-500 shadow-sm min-w-[180px]"
         >
-          <option value="all">Semua Kategori ({exams.length})</option>
+          <option value="all" className="dark:bg-slate-900">Semua Kategori ({exams.length})</option>
           {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option key={cat} value={cat} className="dark:bg-slate-900">{cat}</option>
           ))}
         </select>
       </div>
@@ -213,74 +213,74 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
           return (
             <div
               key={exam.id}
-              className="bg-white border border-slate-200/80 hover:border-slate-300 rounded-2xl p-5 flex flex-col justify-between transition-all group shadow-sm hover:shadow-md"
+              className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all group shadow-sm dark:shadow-none hover:shadow-md"
             >
               <div>
                 {/* Category & Status */}
                 <div className="flex items-center justify-between mb-3">
-                  <span className="px-2.5 py-1 text-[10px] font-semibold bg-slate-100 text-slate-700 rounded-lg flex items-center space-x-1">
-                    <Tag className="w-3 h-3 text-indigo-600" />
+                  <span className="px-2.5 py-1 text-[10px] font-semibold bg-slate-100 dark:bg-zinc-950 text-slate-700 dark:text-zinc-400 rounded-lg flex items-center space-x-1">
+                    <Tag className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                     <span>{exam.category}</span>
                   </span>
 
                   <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded uppercase tracking-wider ${
                     exam.status === 'active'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      ? 'bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-900/40'
                       : exam.status === 'closed'
-                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                      ? 'bg-rose-100 dark:bg-rose-950/20 text-rose-800 dark:text-rose-400 border border-rose-300 dark:border-rose-900/40'
+                      : 'bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border border-amber-300 dark:border-amber-900/40'
                   }`}>
                     {exam.status === 'active' ? 'Sesi Dibuka' : exam.status === 'closed' ? 'Sesi Ditutup' : 'Draft'}
                   </span>
                 </div>
 
                 {/* Exam Title & Description */}
-                <h3 className="text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug">
                   {exam.title}
                 </h3>
                 {exam.authorName && (
-                  <div className="text-[10px] text-indigo-600 font-semibold mt-1">
+                  <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold mt-1">
                     Pembuat Soal: {exam.authorName}
                   </div>
                 )}
-                <p className="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-2 leading-relaxed">
                   {exam.description}
                 </p>
 
                 {/* Meta details */}
-                <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-[11px]">
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <div className="text-slate-400 flex items-center justify-center space-x-1">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-3 gap-2 text-center text-[11px]">
+                  <div className="bg-slate-50 dark:bg-zinc-950 p-2 rounded-xl border border-slate-100 dark:border-zinc-800/60">
+                    <div className="text-slate-400 dark:text-zinc-500 flex items-center justify-center space-x-1">
                       <HelpCircle className="w-3 h-3 text-blue-500" />
                       <span>Soal</span>
                     </div>
-                    <div className="font-bold text-slate-900 mt-0.5">{examQuestions.length}</div>
+                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">{examQuestions.length}</div>
                   </div>
 
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <div className="text-slate-400 flex items-center justify-center space-x-1">
+                  <div className="bg-slate-50 dark:bg-zinc-950 p-2 rounded-xl border border-slate-100 dark:border-zinc-800/60">
+                    <div className="text-slate-400 dark:text-zinc-500 flex items-center justify-center space-x-1">
                       <Clock className="w-3 h-3 text-amber-500" />
                       <span>Durasi</span>
                     </div>
-                    <div className="font-bold text-slate-900 mt-0.5">{exam.durationMinutes} mnt</div>
+                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">{exam.durationMinutes} mnt</div>
                   </div>
 
-                  <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
-                    <div className="text-slate-400 flex items-center justify-center space-x-1">
+                  <div className="bg-slate-50 dark:bg-zinc-950 p-2 rounded-xl border border-slate-100 dark:border-zinc-800/60">
+                    <div className="text-slate-400 dark:text-zinc-500 flex items-center justify-center space-x-1">
                       <FileCheck className="w-3 h-3 text-emerald-500" />
                       <span>Pass %</span>
                     </div>
-                    <div className="font-bold text-slate-900 mt-0.5">{exam.passingScore}%</div>
+                    <div className="font-bold text-slate-900 dark:text-white mt-0.5">{exam.passingScore}%</div>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-5 pt-3 border-t border-slate-100 space-y-2">
+              <div className="mt-5 pt-3 border-t border-slate-100 dark:border-zinc-800 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <button
                     onClick={() => onManageQuestions(exam)}
-                    className="flex-1 py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5"
+                    className="flex-1 py-2 px-3 bg-indigo-50 dark:bg-zinc-950 hover:bg-indigo-100 dark:hover:bg-zinc-800 text-indigo-700 dark:text-indigo-400 border border-transparent dark:border-zinc-800 rounded-xl text-xs font-semibold transition-all flex items-center justify-center space-x-1.5"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
                     <span>Kelola Soal ({examQuestions.length})</span>
@@ -290,7 +290,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                     <button
                       onClick={() => handleOpenEditModal(exam)}
                       title="Edit Ujian"
-                      className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -298,7 +298,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                     <button
                       onClick={() => handleDelete(exam.id, exam.title)}
                       title="Hapus Ujian"
-                      className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -310,8 +310,8 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                   onClick={() => handleToggleSession(exam)}
                   className={`w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 border ${
                     exam.status === 'active'
-                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
-                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                      ? 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/40'
+                      : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40'
                   }`}
                 >
                   {exam.status === 'active' ? (
@@ -333,7 +333,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
         })}
 
         {filteredExams.length === 0 && (
-          <div className="col-span-full p-12 text-center bg-white border border-slate-200/80 rounded-2xl text-slate-400 text-xs shadow-sm">
+          <div className="col-span-full p-12 text-center bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl text-slate-400 dark:text-zinc-500 text-xs shadow-sm">
             Tidak ada paket ujian yang ditemukan. Silakan buat paket ujian baru.
           </div>
         )}
@@ -341,15 +341,15 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
 
       {/* Create / Edit Exam Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-lg bg-white border border-slate-200/80 rounded-2xl shadow-2xl overflow-hidden text-slate-900 animate-fade-in">
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200/80">
-              <h3 className="text-sm font-bold text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-150 animate-fade-in">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-zinc-950 border-b border-slate-200/80 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                 {editingExam ? 'Edit Paket Ujian' : 'Buat Paket Ujian Baru'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg hover:bg-slate-200/60 dark:hover:bg-zinc-800"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -357,95 +357,95 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
 
             <form onSubmit={handleSubmitExam} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Judul Paket Ujian</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Judul Paket Ujian</label>
                 <input
                   type="text"
                   placeholder="Contoh: Evaluasi K3 Keselamatan Kerja 2026"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Deskripsi Ujian</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Deskripsi Ujian</label>
                 <textarea
                   rows={3}
                   placeholder="Penjelasan ringkas tentang materi evaluasi ini..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Kategori / Divisi</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Kategori / Divisi</label>
                   <input
                     type="text"
                     placeholder="Contoh: K3, Cybersecurity, Onboarding"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Status Sesi Ujian</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Status Sesi Ujian</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'active' | 'draft' | 'closed')}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white font-medium"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 font-medium"
                   >
-                    <option value="active">Aktif (Sesi Dibuka)</option>
-                    <option value="closed">Ditutup (Sesi Ditutup Admin)</option>
-                    <option value="draft">Draft (Disembunyikan)</option>
+                    <option value="active" className="dark:bg-zinc-900">Aktif (Sesi Dibuka)</option>
+                    <option value="closed" className="dark:bg-zinc-900">Ditutup (Sesi Ditutup Admin)</option>
+                    <option value="draft" className="dark:bg-zinc-900">Draft (Disembunyikan)</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Durasi Pengerjaan (Menit)</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Durasi Pengerjaan (Menit)</label>
                   <input
                     type="number"
                     min={1}
                     max={180}
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Passing Grade Minimal (%)</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Passing Grade Minimal (%)</label>
                   <input
                     type="number"
                     min={1}
                     max={100}
                     value={passingScore}
                     onChange={(e) => setPassingScore(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
                     required
                   />
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+              <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-medium"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20 dark:shadow-none"
                 >
                   Simpan Paket Ujian
                 </button>

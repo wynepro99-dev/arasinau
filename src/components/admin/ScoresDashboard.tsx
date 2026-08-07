@@ -62,6 +62,12 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     }
   }, [activeAttemptDetail]);
 
+  useEffect(() => {
+    if (selectedAttemptFromParent) {
+      setActiveAttemptDetail(selectedAttemptFromParent);
+    }
+  }, [selectedAttemptFromParent]);
+
   const handleGradeChange = (qId: string, field: 'pointsEarned' | 'feedback', value: any) => {
     setEssayGrades(prev => ({
       ...prev,
@@ -98,108 +104,78 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
           isCorrect: isPass,
           aiFeedback: fb
         };
-        newTotalPoints += inputPts;
       } else {
         updatedAnswers[qId] = { ...ans };
-        newTotalPoints += (ans.pointsEarned || 0);
       }
+
+      newTotalPoints += updatedAnswers[qId].pointsEarned || 0;
       newTotalMax += maxPts;
     });
 
-    const newScore = newTotalMax > 0 ? Math.round((newTotalPoints / newTotalMax) * 100) : 0;
-    const matchedExam = exams.find(e => e.id === activeAttemptDetail.examId);
-    const passingScore = matchedExam?.passingScore || 70;
-    const isPassed = newScore >= passingScore;
+    const activeExam = exams.find(e => e.id === activeAttemptDetail.examId);
+    const passPct = activeExam?.passingScore || 75;
+    const finalScore = newTotalMax > 0 ? Math.round((newTotalPoints / newTotalMax) * 100) : 0;
+    const isPassed = finalScore >= passPct;
 
-    const updatedAttemptRecord: ExamAttempt = {
+    const updated: ExamAttempt = {
       ...activeAttemptDetail,
-      score: newScore,
+      answers: updatedAnswers,
       totalPointsEarned: newTotalPoints,
       totalMaxPoints: newTotalMax,
-      passed: isPassed,
-      answers: updatedAnswers
+      score: finalScore,
+      passed: isPassed
     };
 
-    updateAttempt(updatedAttemptRecord);
-    setActiveAttemptDetail(updatedAttemptRecord);
+    updateAttempt(updated);
+    onToast('Nilai evaluasi manual berhasil disimpan!', 'success');
+    setActiveAttemptDetail(updated);
     if (onRefresh) onRefresh();
-    onToast('Penilaian essay berhasil disimpan dan skor akhir telah diperbarui!', 'success');
   };
-
-  const departments = Array.from(new Set(attempts.map(a => a.userDepartment)));
-
-  const filteredAttempts = attempts.filter(att => {
-    const matchesName = att.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        att.examTitle.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = deptFilter === 'all' || att.userDepartment === deptFilter;
-    const matchesExam = examFilter === 'all' || att.examId === examFilter;
-    const matchesStatus = statusFilter === 'all' ||
-                          (statusFilter === 'passed' && att.passed) ||
-                          (statusFilter === 'failed' && !att.passed);
-
-    return matchesName && matchesDept && matchesExam && matchesStatus;
-  });
-
-  // Summary Metrics for current filtered view
-  const avgFilteredScore = filteredAttempts.length > 0
-    ? Math.round(filteredAttempts.reduce((acc, curr) => acc + curr.score, 0) / filteredAttempts.length)
-    : 0;
-
-  const passedFilteredCount = filteredAttempts.filter(a => a.passed).length;
 
   const handleExportExcel = () => {
     if (filteredAttempts.length === 0) {
-      onToast('Tidak ada data hasil ujian untuk diexport.', 'error');
+      onToast('Tidak ada data hasil ujian untuk di-export.', 'error');
       return;
     }
 
     const allQuestions = getQuestions();
     const qMap = new Map(allQuestions.map(q => [q.id, q]));
 
-    // Helper to sanitize text for XML
-    const escapeXml = (str: string) => {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
-    };
-
-    // Find maximum questions answered across attempts
     let maxQCount = 0;
     filteredAttempts.forEach(a => {
       const qCount = Object.keys(a.answers || {}).length;
       if (qCount > maxQCount) maxQCount = qCount;
     });
 
-    // Build Table Headers
     let headerHTML = `
       <tr>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: center;">No</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: left;">ID Percobaan</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: left;">Nama Peserta</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: left;">Departemen</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: left;">Judul Ujian</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: center;">Tanggal Selesai</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: center;">Durasi</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: right;">Poin Diraih</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: right;">Poin Maksimal</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: right;">Skor (%)</th>
-        <th style="background-color: #3730a3; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: center;">Status</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">No</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">ID Attempt</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Nama Karyawan</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Departemen</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Ujian</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Tanggal Selesai</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Durasi</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Poin Diperoleh</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Poin Max</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Skor Akhir (%)</th>
+        <th style="background-color: #6366f1; color: white; border: 1px solid #cbd5e1; padding: 8px;">Status</th>
     `;
 
     for (let i = 1; i <= maxQCount; i++) {
       headerHTML += `
-        <th style="background-color: #4f46e5; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: left;">Jawaban Soal ${i}</th>
-        <th style="background-color: #4f46e5; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: center;">Hasil Soal ${i}</th>
-        <th style="background-color: #4f46e5; color: #ffffff; font-weight: bold; padding: 10px; border: 1px solid #cbd5e1; text-align: right;">Poin Soal ${i}</th>
+        <th style="background-color: #4f46e5; color: white; border: 1px solid #cbd5e1; padding: 8px;">Jawaban Soal ${i}</th>
+        <th style="background-color: #4f46e5; color: white; border: 1px solid #cbd5e1; padding: 8px;">Status Soal ${i}</th>
+        <th style="background-color: #4f46e5; color: white; border: 1px solid #cbd5e1; padding: 8px;">Skor Soal ${i}</th>
       `;
     }
     headerHTML += `</tr>`;
 
-    // Build Table Body Rows
+    const escapeXml = (str: string) => {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    };
+
     const rowsHTML = filteredAttempts.map((a, index) => {
       const mins = Math.floor(a.durationSecondsUsed / 60);
       const secs = a.durationSecondsUsed % 60;
@@ -302,21 +278,44 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     onToast('File Excel Rekap Hasil Ujian berhasil diunduh dengan kolom terpisah!', 'success');
   };
 
+  // Unique filters data source
+  const departments = Array.from(new Set(attempts.map((a) => a.userDepartment || 'Lainnya')));
+
+  // Filter calculations
+  const filteredAttempts = attempts.filter((att) => {
+    const matchesSearch = att.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          att.examTitle.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = deptFilter === 'all' || att.userDepartment === deptFilter;
+    const matchesExam = examFilter === 'all' || att.examId === examFilter;
+    
+    let matchesStatus = true;
+    if (statusFilter === 'passed') matchesStatus = att.passed;
+    if (statusFilter === 'failed') matchesStatus = !att.passed;
+
+    return matchesSearch && matchesDept && matchesExam && matchesStatus;
+  });
+
+  const avgFilteredScore = filteredAttempts.length > 0
+    ? Math.round(filteredAttempts.reduce((acc, curr) => acc + curr.score, 0) / filteredAttempts.length)
+    : 0;
+
+  const passedFilteredCount = filteredAttempts.filter(a => a.passed).length;
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-zinc-200">
       
       {/* Header bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200/80 p-4 sm:p-6 rounded-2xl shadow-sm print:hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm print:hidden">
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-            <h1 className="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white tracking-tight">
               Rekap & Evaluasi Nilai Ujian
             </h1>
-            <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-purple-100 text-purple-600 border border-purple-300 rounded-full uppercase tracking-wider whitespace-nowrap w-fit">
+            <span className="px-2 py-1 text-[9px] sm:text-[10px] font-bold bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-800 rounded-full uppercase tracking-wider whitespace-nowrap w-fit">
               ⚙ Kalkulasi Otomatis
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2 leading-relaxed">
             Laporan hasil pengerjaan real-time, transparansi penilaian instan, dan riwayat kelulusan per individu.
           </p>
         </div>
@@ -331,7 +330,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                   if (onRefresh) onRefresh();
                 }
               }}
-              className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition-all flex items-center space-x-1.5"
+              className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold border border-transparent dark:border-rose-900/40 transition-all flex items-center space-x-1.5"
             >
               <Trash2 className="w-4 h-4" />
               <span>Hapus</span>
@@ -339,7 +338,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
           )}
           <button
             onClick={handleExportExcel}
-            className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-600/20 transition-all flex items-center space-x-1.5"
+            className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-600/20 dark:shadow-none transition-all flex items-center space-x-1.5"
           >
             <Download className="w-4 h-4" />
             <span>Export Excel</span>
@@ -348,7 +347,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
       </div>
 
       {/* Filter and Metrics Summary */}
-      <div className="bg-white border border-slate-200/80 p-4 rounded-2xl space-y-4 shadow-sm print:hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-4 rounded-2xl space-y-4 shadow-sm print:hidden">
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           
@@ -360,7 +359,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
               placeholder="Cari nama karyawan / ujian..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
             />
           </div>
 
@@ -368,11 +367,11 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
           <select
             value={deptFilter}
             onChange={(e) => setDeptFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:border-indigo-500"
+            className="px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500"
           >
-            <option value="all">Semua Departemen ({departments.length})</option>
+            <option value="all" className="dark:bg-slate-900">Semua Departemen ({departments.length})</option>
             {departments.map((d) => (
-              <option key={d} value={d}>{d}</option>
+              <option key={d} value={d} className="dark:bg-slate-900">{d}</option>
             ))}
           </select>
 
@@ -380,11 +379,11 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
           <select
             value={examFilter}
             onChange={(e) => setExamFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:border-indigo-500"
+            className="px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500"
           >
-            <option value="all">Semua Paket Ujian ({exams.length})</option>
+            <option value="all" className="dark:bg-slate-900">Semua Ujian ({exams.length})</option>
             {exams.map((e) => (
-              <option key={e.id} value={e.id}>{e.title}</option>
+              <option key={e.id} value={e.id} className="dark:bg-slate-900">{e.title}</option>
             ))}
           </select>
 
@@ -392,29 +391,29 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:border-indigo-500"
+            className="px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500"
           >
-            <option value="all">Semua Status Kelulusan</option>
-            <option value="passed">Hanya LULUS</option>
-            <option value="failed">Hanya TIDAK LULUS</option>
+            <option value="all" className="dark:bg-slate-900">Semua Status</option>
+            <option value="passed" className="dark:bg-slate-900">Hanya LULUS</option>
+            <option value="failed" className="dark:bg-slate-900">Hanya TIDAK LULUS</option>
           </select>
 
         </div>
 
         {/* Quick View Metrics Bar */}
-        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-4">
+        <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-4">
           <div className="flex items-center space-x-6">
             <div>
-              <span>Terpilih: </span>
-              <span className="font-bold text-slate-900">{filteredAttempts.length} data</span>
+              <span className="dark:text-zinc-400">Terpilih: </span>
+              <span className="font-bold text-slate-900 dark:text-white">{filteredAttempts.length} data</span>
             </div>
             <div>
-              <span>Rata-rata Skor: </span>
-              <span className="font-bold text-indigo-600">{avgFilteredScore} / 100</span>
+              <span className="dark:text-zinc-400">Rata-rata Skor: </span>
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">{avgFilteredScore} / 100</span>
             </div>
             <div>
-              <span>Jumlah Lulus: </span>
-              <span className="font-bold text-emerald-600">{passedFilteredCount} Peserta</span>
+              <span className="dark:text-zinc-400">Jumlah Lulus: </span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{passedFilteredCount} Peserta</span>
             </div>
           </div>
         </div>
@@ -422,10 +421,10 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
       </div>
 
       {/* Main Results Table */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200/80 uppercase tracking-wider">
+          <table className="w-full text-left text-xs text-slate-600 dark:text-zinc-300 border-collapse">
+            <thead className="bg-slate-50 dark:bg-zinc-950 text-slate-700 dark:text-zinc-400 font-semibold border-b border-slate-200/80 dark:border-zinc-800 uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3.5">Nama Peserta</th>
                 <th className="px-5 py-3.5">Departemen</th>
@@ -436,46 +435,46 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                 <th className="px-5 py-3.5 text-right print:hidden">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
               {filteredAttempts.map((att) => (
-                <tr key={att.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-5 py-3.5 font-semibold text-slate-900 flex items-center space-x-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0">
+                <tr key={att.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-950/40 transition-colors">
+                  <td className="px-5 py-3.5 font-semibold text-slate-900 dark:text-white flex items-center space-x-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-zinc-800 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center shrink-0">
                       {att.userName.substring(0, 1)}
                     </div>
                     <span>{att.userName}</span>
                   </td>
 
-                  <td className="px-5 py-3.5 text-slate-500">
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px]">
+                  <td className="px-5 py-3.5 text-slate-500 dark:text-zinc-400">
+                    <span className="px-2 py-0.5 bg-slate-100 dark:bg-zinc-950 text-slate-700 dark:text-zinc-400 rounded text-[11px] border border-transparent dark:border-zinc-800">
                       {att.userDepartment}
                     </span>
                   </td>
 
-                  <td className="px-5 py-3.5 text-slate-800 font-medium">
+                  <td className="px-5 py-3.5 text-slate-800 dark:text-zinc-200 font-medium">
                     {att.examTitle}
                   </td>
 
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-black text-slate-900">{att.score}</span>
-                    <span className="text-[10px] text-slate-400"> / 100</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-white">{att.score}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-zinc-500"> / 100</span>
                   </td>
 
                   <td className="px-5 py-3.5">
                     {att.passed ? (
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-transparent dark:border-emerald-900/40">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>LULUS</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-transparent dark:border-rose-900/40">
                         <XCircle className="w-3.5 h-3.5" />
                         <span>TIDAK LULUS</span>
                       </span>
                     )}
                   </td>
 
-                  <td className="px-5 py-3.5 text-slate-500 text-[11px]">
+                  <td className="px-5 py-3.5 text-slate-500 dark:text-zinc-400 text-[11px]">
                     {new Date(att.completedAt).toLocaleDateString('id-ID', {
                       day: 'numeric',
                       month: 'short',
@@ -488,7 +487,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                   <td className="px-5 py-3.5 text-right print:hidden">
                     <button
                       onClick={() => setActiveAttemptDetail(att)}
-                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[11px] font-semibold transition-all inline-flex items-center space-x-1"
+                      className="px-3 py-1.5 bg-indigo-50 dark:bg-zinc-950 hover:bg-indigo-100 dark:hover:bg-zinc-800 text-indigo-700 dark:text-indigo-400 border border-transparent dark:border-zinc-800 rounded-lg text-[11px] font-semibold transition-all inline-flex items-center space-x-1"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>Detail Lembar Jawaban</span>
@@ -499,7 +498,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
 
               {filteredAttempts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-xs">
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 dark:text-zinc-500 text-xs">
                     Tidak ada lembar jawaban karyawan yang sesuai filter.
                   </td>
                 </tr>
@@ -511,20 +510,20 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
 
       {/* Detail Attempt Inspection Modal */}
       {activeAttemptDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden text-slate-900 max-h-[90vh] flex flex-col animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-200 max-h-[90vh] flex flex-col animate-fade-in">
             
-            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-800">
               <div>
-                <h3 className="text-sm font-bold text-slate-900">Detail Lembar Jawaban Ujian</h3>
-                <p className="text-xs text-slate-500">{activeAttemptDetail.userName} ({activeAttemptDetail.userDepartment})</p>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Detail Lembar Jawaban Ujian</h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400">{activeAttemptDetail.userName} ({activeAttemptDetail.userDepartment})</p>
               </div>
               <button
                 onClick={() => {
                   setActiveAttemptDetail(null);
                   if (onClearSelectedAttempt) onClearSelectedAttempt();
                 }}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200/60"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 rounded-lg hover:bg-slate-200/60 dark:hover:bg-zinc-850"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -532,142 +531,142 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
 
             <div className="p-6 overflow-y-auto space-y-4 flex-1">
               {/* Summary card */}
-              <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between">
+              <div className="p-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs text-slate-500">Judul Ujian:</span>
-                  <p className="text-sm font-bold text-slate-900">{activeAttemptDetail.examTitle}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <span className="text-xs text-slate-450 dark:text-zinc-550">Judul Ujian:</span>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{escapeXml(activeAttemptDetail.examTitle)}</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                     Durasi Terpakai: {Math.floor(activeAttemptDetail.durationSecondsUsed / 60)}m {activeAttemptDetail.durationSecondsUsed % 60}s
                   </p>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-2xl font-black text-slate-900">{activeAttemptDetail.score} <span className="text-xs font-normal text-slate-400">/ 100</span></div>
+                <div className="text-left sm:text-right shrink-0">
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">{activeAttemptDetail.score} <span className="text-xs font-normal text-slate-400">/ 100</span></div>
                   <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full mt-1 ${
                     activeAttemptDetail.passed
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-rose-100 text-rose-700'
+                      ? 'bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450'
+                      : 'bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-450'
                   }`}>
                     {activeAttemptDetail.passed ? 'LULUS' : 'TIDAK LULUS'}
                   </span>
                 </div>
               </div>
 
-              {/* Answers Breakdown */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Rincian Jawaban per Nomor Soal
-                </h4>
-
+              {/* Questions list */}
+              <div className="space-y-4 pt-2">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Rekap Pengerjaan Soal</h4>
+                
                 {(() => {
                   const allQuestions = getQuestions();
                   const qMap = new Map(allQuestions.map(q => [q.id, q]));
 
-                  return (Object.entries(activeAttemptDetail.answers) as [string, AttemptAnswer][]).map(([qId, ans], idx) => {
+                  return (Object.entries(activeAttemptDetail.answers || {}) as [string, AttemptAnswer][]).map(([qId, ans], idx) => {
                     const qObj = qMap.get(qId);
-                    const isCaseStudy = qObj?.type === 'case_study' || !!ans.essayAnswer;
+                    if (!qObj) return null;
+
+                    const isEssay = qObj.type === 'case_study' || qObj.type === 'essay' || !!ans.essayAnswer;
+                    const maxPts = qObj.points || 25;
 
                     return (
-                      <div key={qId} className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold text-slate-800">
-                            Soal #{idx + 1} {qObj?.questionText ? `: ${qObj.questionText}` : ''}
+                      <div key={qId} className="p-4 border border-slate-100 dark:border-zinc-800 rounded-xl space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="text-xs font-extrabold text-slate-400 dark:text-zinc-500">Soal {idx + 1}</span>
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
+                            ans.isCorrect
+                              ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400'
+                          }`}>
+                            {ans.isCorrect ? 'Benar' : 'Salah'}
                           </span>
-                          {ans.isCorrect ? (
-                            <span className="text-emerald-600 font-bold flex items-center space-x-1 shrink-0">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Benar (+{ans.pointsEarned} poin)</span>
-                            </span>
-                          ) : (
-                            <span className="text-rose-600 font-bold flex items-center space-x-1 shrink-0">
-                              <XCircle className="w-3.5 h-3.5" />
-                              <span>Salah (0 poin)</span>
-                            </span>
-                          )}
                         </div>
 
-                        {qObj?.caseStudyStory && (
-                          <div className="p-2.5 bg-purple-50/60 border border-purple-200 rounded-lg text-[11px] text-slate-700 space-y-0.5">
-                            <span className="font-bold text-purple-800">Cerita Studi Kasus:</span>
-                            <p className="whitespace-pre-line text-slate-800">{qObj.caseStudyStory}</p>
-                          </div>
-                        )}
+                        <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200">{qObj.text}</p>
 
-                        {isCaseStudy ? (
-                          <div className="space-y-3 pt-1">
-                            <div className="p-3 bg-white border border-slate-200 rounded-lg text-xs space-y-1">
-                              <span className="font-bold text-indigo-600 text-[11px] block">Jawaban Essay Karyawan:</span>
-                              <p className="text-slate-800 whitespace-pre-line font-sans leading-relaxed">
-                                {ans.essayAnswer || 'Tidak diisi.'}
-                              </p>
-                            </div>
+                        <div className="bg-slate-50 dark:bg-zinc-950 p-3 rounded-lg text-xs space-y-1">
+                          <span className="text-slate-400 dark:text-zinc-550 block font-medium">Jawaban Karyawan:</span>
+                          <p className="font-bold text-slate-900 dark:text-white">
+                            {ans.essayAnswer || (() => {
+                              const opt = qObj.options?.find(o => o.id === ans.selectedAnswerId);
+                              return opt ? opt.text : ans.selectedAnswerId || '-';
+                            })()}
+                          </p>
+                        </div>
 
-                            {(qObj?.sampleAnswer || qObj?.explanation) && (
-                              <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900 space-y-0.5">
-                                <span className="font-bold block text-amber-800">Acuan Kunci Jawaban / Rubrik:</span>
-                                <p className="whitespace-pre-line">{qObj.sampleAnswer || qObj.explanation}</p>
-                              </div>
-                            )}
-
-                            {/* Admin Manual Score Input */}
-                            <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-indigo-900 flex items-center space-x-1">
-                                  <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
-                                  <span>Penilaian Manual Admin:</span>
-                                </span>
-                                <div className="flex items-center space-x-1.5">
-                                  <span className="text-xs text-slate-600 font-medium">Beri Poin:</span>
+                        {/* AI Grading & Feedback / Manual Adjustment */}
+                        <div className="p-3 bg-indigo-50/50 dark:bg-zinc-850 border border-indigo-100/30 dark:border-zinc-800 rounded-lg text-xs space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-indigo-700 dark:text-indigo-400 font-bold flex items-center gap-1.5">
+                              <FileCheck className="w-3.5 h-3.5" />
+                              <span>Evaluasi & Skor Penilaian</span>
+                            </span>
+                            
+                            <div className="flex items-center space-x-1">
+                              <span className="text-[10px] text-slate-400 font-medium">Skor:</span>
+                              {isEssay ? (
+                                <div className="flex items-center space-x-1">
                                   <input
                                     type="number"
                                     min={0}
-                                    max={qObj?.points || 25}
-                                    value={essayGrades[qId]?.pointsEarned ?? 0}
-                                    onChange={(e) => handleGradeChange(qId, 'pointsEarned', e.target.value)}
-                                    className="w-16 px-2 py-1 text-xs font-bold text-indigo-900 bg-white border border-indigo-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    max={maxPts}
+                                    value={essayGrades[qId]?.pointsEarned ?? ans.pointsEarned ?? 0}
+                                    onChange={(e) => handleGradeChange(qId, 'pointsEarned', Number(e.target.value))}
+                                    className="w-12 text-center py-0.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded font-bold text-slate-900 dark:text-white"
                                   />
-                                  <span className="text-xs font-bold text-slate-500">/ {qObj?.points || 25} PTS</span>
+                                  <span className="text-slate-400">/ {maxPts}</span>
                                 </div>
-                              </div>
-
-                              <div>
-                                <label className="block text-[11px] font-semibold text-indigo-950 mb-1">
-                                  Catatan / Ulasan Feedback untuk Karyawan:
-                                </label>
-                                <textarea
-                                  rows={2}
-                                  value={essayGrades[qId]?.feedback ?? ''}
-                                  onChange={(e) => handleGradeChange(qId, 'feedback', e.target.value)}
-                                  placeholder="Tulis ulasan/evaluasi jawaban..."
-                                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-indigo-200 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                              </div>
+                              ) : (
+                                <span className="font-extrabold text-slate-800 dark:text-zinc-200">
+                                  {ans.pointsEarned} / {maxPts}
+                                </span>
+                              )}
                             </div>
                           </div>
-                        ) : (
-                          <div className="text-xs text-slate-600">
-                            Jawaban dipilih ID: <span className="font-mono text-indigo-600">{ans.selectedAnswerId}</span>
+
+                          <div className="space-y-1">
+                            <span className="text-[10px] text-slate-450 dark:text-zinc-550 font-medium">Catatan / Umpan Balik AI:</span>
+                            {isEssay ? (
+                              <textarea
+                                rows={2}
+                                value={essayGrades[qId]?.feedback ?? ans.aiFeedback ?? ''}
+                                onChange={(e) => handleGradeChange(qId, 'feedback', e.target.value)}
+                                placeholder="Tulis umpan balik guru atau nilai revisi di sini..."
+                                className="w-full p-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-[11px] text-slate-800 dark:text-zinc-200 focus:outline-none"
+                              />
+                            ) : (
+                              <p className="text-slate-600 dark:text-zinc-400 italic">
+                                {ans.aiFeedback || 'Evaluasi otomatis berbasis kunci jawaban pilihan ganda.'}
+                              </p>
+                            )}
                           </div>
-                        )}
+                        </div>
+
                       </div>
                     );
                   });
                 })()}
               </div>
+
             </div>
 
-            {/* Modal Footer with Save Button */}
-            <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-t border-slate-200">
-              <span className="text-xs text-slate-500">
-                Ubah poin essay di atas lalu klik simpan untuk menghitung ulang nilai.
-              </span>
+            <div className="px-6 py-4 bg-slate-50 dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveAttemptDetail(null);
+                  if (onClearSelectedAttempt) onClearSelectedAttempt();
+                }}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold"
+              >
+                Tutup
+              </button>
+
               <button
                 type="button"
                 onClick={handleSaveGrades}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 shadow-md shadow-indigo-600/20 transition-all active:scale-95"
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20 dark:shadow-none flex items-center space-x-1.5"
               >
                 <Save className="w-4 h-4" />
-                <span>Simpan Penilaian Essay</span>
+                <span>Simpan Penilaian</span>
               </button>
             </div>
 
@@ -678,3 +677,18 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     </div>
   );
 };
+
+// Helper function to escape XML strings for Excel output safely
+function escapeXml(unsafe: string): string {
+  if (!unsafe) return '';
+  return unsafe.replace(/[<>&'"]/g, (c) => {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
