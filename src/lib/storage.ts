@@ -406,7 +406,7 @@ export function registerUser(newUser: Omit<User, 'id'>): User {
   return createdUser;
 }
 
-export function updateUser(userId: string, updates: Partial<User>): User {
+export async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
   const idx = memoryUsers.findIndex(u => u.id === userId);
   if (idx === -1) {
     throw new Error('User tidak ditemukan.');
@@ -422,21 +422,19 @@ export function updateUser(userId: string, updates: Partial<User>): User {
 
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('users').update({
-          name: updated.name,
-          email: updated.email,
-          password: updated.password,
-          role: updated.role,
-          department: updated.department,
-          avatar: updated.avatar,
-          company: updated.company || 'BANK'
-        }).eq('id', userId);
-      } catch (e) {
-        console.error('Update user error:', e);
-      }
-    })();
+    const { error } = await client.from('users').update({
+      name: updated.name,
+      email: updated.email,
+      password: updated.password,
+      role: updated.role,
+      department: updated.department,
+      avatar: updated.avatar,
+      company: updated.company || 'BANK'
+    }).eq('id', userId);
+
+    if (error) {
+      throw new Error(`Gagal menyimpan perubahan ke database: ${error.message}`);
+    }
   }
 
   return updated;

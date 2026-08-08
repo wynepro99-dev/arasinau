@@ -73,7 +73,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         updates.password = password;
       }
 
-      const updated = updateUser(currentUser.id, updates);
+      const updated = await updateUser(currentUser.id, updates);
       onUpdateCurrentUser(updated);
       onToast('Pengaturan profil berhasil diperbarui!', 'success');
       setPassword('');
