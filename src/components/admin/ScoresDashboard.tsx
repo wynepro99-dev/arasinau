@@ -608,6 +608,13 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                           </p>
                         </div>
 
+                        {isEssay && qObj.sampleAnswer && (
+                          <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-900/30 p-3 rounded-lg text-xs space-y-1">
+                            <span className="text-emerald-700 dark:text-emerald-400 block font-bold">Acuan Jawaban / Rubrik Penilaian:</span>
+                            <p className="italic text-slate-700 dark:text-zinc-300 whitespace-pre-line font-medium">{qObj.sampleAnswer}</p>
+                          </div>
+                        )}
+
                         {/* AI Grading & Feedback / Manual Adjustment */}
                         <div className="p-3 bg-indigo-50/50 dark:bg-zinc-850 border border-indigo-100/30 dark:border-zinc-800 rounded-lg text-xs space-y-3">
                           <div className="flex items-center justify-between">
@@ -639,7 +646,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[10px] text-slate-450 dark:text-zinc-550 font-medium">Catatan / Umpan Balik AI:</span>
+                            <span className="text-[10px] text-slate-400 dark:text-zinc-550 font-medium">Catatan / Umpan Balik Evaluator (Admin):</span>
                             {isEssay ? (
                               <textarea
                                 rows={2}
