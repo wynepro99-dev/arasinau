@@ -52,8 +52,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     const currentUsers = getUsers();
     const found = currentUsers.find(u => {
       const generatedUsername = getUserUsername(u);
+      const isAll = u.company === 'ALL';
+      const alternateUsername = isAll ? `${generatedUsername.split('.')[0]}.sec` : '';
       return u.email.toLowerCase() === query || 
              generatedUsername === query ||
+             (isAll && alternateUsername === query) ||
              u.name.toLowerCase() === query;
     });
     if (found) {

@@ -8,7 +8,7 @@ export interface User {
   role: UserRole;
   department: string;
   avatar?: string;
-  company?: 'BANK' | 'SEC'; // BANK = Bank, SEC = Bimbel
+  company?: 'BANK' | 'SEC' | 'ALL'; // BANK = Bank, SEC = Bimbel, ALL = Both
 }
 
 export type QuestionType = 'multiple_choice' | 'true_false' | 'case_study' | 'essay';

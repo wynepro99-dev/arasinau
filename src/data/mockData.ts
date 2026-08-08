@@ -259,7 +259,15 @@ const RAW_INITIAL_USERS: User[] = [
 ];
 
 export const INITIAL_USERS: User[] = [
-  ...RAW_INITIAL_USERS.map(u => ({ ...u, company: 'BANK' as const })),
+  ...RAW_INITIAL_USERS.map(u => {
+    const isAll = u.name.toLowerCase().includes('ahmad wahyu') || 
+                  u.name.toLowerCase().includes('della ananto') || 
+                  u.name.toLowerCase().includes('vergiawan');
+    return {
+      ...u,
+      company: (isAll ? 'ALL' : 'BANK') as 'BANK' | 'SEC' | 'ALL'
+    };
+  }),
   {
     id: 'user-sec-putri',
     name: 'Putri',
@@ -317,7 +325,7 @@ export const INITIAL_EXAMS: ExamPackage[] = [
     passingScore: 70,
     createdAt: new Date().toISOString().split('T')[0],
     status: 'active',
-    authorName: 'Taka Ditya Darma',
+    authorName: 'Della Ananto',
     scope: 'SEC'
   }
 ];
