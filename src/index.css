@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+/* Mengunci scroll halaman saat loading screen aktif */
+body.loading-active {
+    overflow: hidden;
+}
+
+/* Container utama loading screen */
+#meta-loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #020617; /* Latar belakang slate-950 gelap mewah matching web app */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999; /* Memastikan selalu berada di lapisan paling atas */
+    transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.6s;
+}
+
+/* Animasi untuk logo */
+.loading-logo {
+    width: 130px; /* Sesuaikan ukuran logo */
+    height: auto;
+    animation: smoothPulse 1.5s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Keyframes untuk efek denyut (pulse) yang halus */
+@keyframes smoothPulse {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1.08);
+        opacity: 1;
+    }
+}
+
+/* Class yang ditambahkan oleh JavaScript untuk menyembunyikan loading screen */
+#meta-loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}

@@ -50,6 +50,10 @@ export default function App() {
   const [activeQuestionExam, setActiveQuestionExam] = useState<ExamPackage | null>(null);
   const [activeTakingExam, setActiveTakingExam] = useState<ExamPackage | null>(null);
   const [activeResultAttempt, setActiveResultAttempt] = useState<ExamAttempt | null>(null);
+  
+  // Loading Screen State
+  const [showLoading, setShowLoading] = useState(true);
+  const [loadingHidden, setLoadingHidden] = useState(false);
 
   // Toast State
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -147,6 +151,27 @@ export default function App() {
     }
   }, [exams]);
 
+  // Loading Screen Transition Effects on Mount
+  useEffect(() => {
+    document.body.classList.add('loading-active');
+    
+    // Smooth transition timers
+    const fadeTimer = setTimeout(() => {
+      setLoadingHidden(true);
+      document.body.classList.remove('loading-active');
+    }, 1200);
+
+    const removeTimer = setTimeout(() => {
+      setShowLoading(false);
+    }, 1800);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+      document.body.classList.remove('loading-active');
+    };
+  }, []);
+
   const handleSelectUser = (user: User | null) => {
     setCurrentUser(user);
     setCurrentUserTab(user);
@@ -173,6 +198,22 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+      
+      {/* Loading Screen Overlay */}
+      {showLoading && (
+        <div 
+          id="meta-loading-screen" 
+          className={loadingHidden ? 'hidden' : ''}
+        >
+          <div className="loading-content">
+            <img 
+              src="https://antarrumeksaarta.vittoriaproperti.com/uploads/profile/d96a287d-a983-4e54-8719-b46c7a2f3694.png" 
+              alt="Antar Rumeksa Arta Logo" 
+              className="loading-logo" 
+            />
+          </div>
+        </div>
+      )}
       
       {/* Top Navbar */}
       <Navbar
