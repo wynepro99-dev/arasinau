@@ -71,6 +71,70 @@ export default function App() {
     });
   }, []);
 
+  // Persist and restore activeTab, activeQuestionExam, and activeTakingExam in localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTab = localStorage.getItem('ara_active_tab');
+      if (savedTab) {
+        // Only restore if role is compatible
+        const user = getCurrentUser();
+        if (user) {
+          const isKaryawan = user.role === 'karyawan';
+          const isAdminTab = savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'scores';
+          if (isKaryawan && isAdminTab) {
+            setActiveTab('employee_dashboard');
+          } else {
+            setActiveTab(savedTab);
+          }
+        } else {
+          setActiveTab(savedTab);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && activeTab) {
+      localStorage.setItem('ara_active_tab', activeTab);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (activeQuestionExam) {
+        localStorage.setItem('ara_active_question_exam_id', activeQuestionExam.id);
+      } else {
+        localStorage.removeItem('ara_active_question_exam_id');
+      }
+    }
+  }, [activeQuestionExam]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (activeTakingExam) {
+        localStorage.setItem('ara_active_taking_exam_id', activeTakingExam.id);
+      } else {
+        localStorage.removeItem('ara_active_taking_exam_id');
+      }
+    }
+  }, [activeTakingExam]);
+
+  useEffect(() => {
+    if (exams.length > 0) {
+      const savedQExamId = localStorage.getItem('ara_active_question_exam_id');
+      if (savedQExamId && !activeQuestionExam) {
+        const found = exams.find(e => e.id === savedQExamId);
+        if (found) setActiveQuestionExam(found);
+      }
+
+      const savedTakingExamId = localStorage.getItem('ara_active_taking_exam_id');
+      if (savedTakingExamId && !activeTakingExam) {
+        const found = exams.find(e => e.id === savedTakingExamId);
+        if (found) setActiveTakingExam(found);
+      }
+    }
+  }, [exams]);
+
   const handleSelectUser = (user: User | null) => {
     setCurrentUser(user);
     setCurrentUserTab(user);

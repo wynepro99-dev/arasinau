@@ -34,14 +34,54 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   onCancelExam,
   onToast
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<Record<string, { answerId: string; essayText?: string; isFlaggedDoubt: boolean }>>({});
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState(exam.durationMinutes * 60);
+  const [currentIndex, setCurrentIndex] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`exam_session_idx_${currentUser.id}_${exam.id}`);
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
+
+  const [userAnswers, setUserAnswers] = useState<Record<string, { answerId: string; essayText?: string; isFlaggedDoubt: boolean }>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`exam_session_answers_${currentUser.id}_${exam.id}`);
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
+  });
+
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`exam_session_time_${currentUser.id}_${exam.id}`);
+      return saved ? Number(saved) : exam.durationMinutes * 60;
+    }
+    return exam.durationMinutes * 60;
+  });
+
   const [startTime] = useState(new Date().toISOString());
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [cheatCount, setCheatCount] = useState(0);
   const [showCheatWarning, setShowCheatWarning] = useState(false);
   const [isDuplicateTab, setIsDuplicateTab] = useState(false);
+
+  // Save session state to localStorage on state change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`exam_session_idx_${currentUser.id}_${exam.id}`, String(currentIndex));
+    }
+  }, [currentIndex, currentUser.id, exam.id]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`exam_session_answers_${currentUser.id}_${exam.id}`, JSON.stringify(userAnswers));
+    }
+  }, [userAnswers, currentUser.id, exam.id]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`exam_session_time_${currentUser.id}_${exam.id}`, String(timeLeftSeconds));
+    }
+  }, [timeLeftSeconds, currentUser.id, exam.id]);
 
   const submitRef = React.useRef(handleFinalSubmit);
   useEffect(() => {
@@ -153,6 +193,14 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 
   const handleFinalSubmit = () => {
     setShowSubmitModal(false);
+
+    // Clear local storage exam session keys
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(`exam_session_idx_${currentUser.id}_${exam.id}`);
+      localStorage.removeItem(`exam_session_answers_${currentUser.id}_${exam.id}`);
+      localStorage.removeItem(`exam_session_time_${currentUser.id}_${exam.id}`);
+      localStorage.removeItem('ara_active_taking_exam_id');
+    }
 
     let totalPointsEarned = 0;
     let totalMaxPoints = 0;
