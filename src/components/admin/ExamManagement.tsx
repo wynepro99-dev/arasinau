@@ -162,9 +162,9 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
         <div className="flex items-center space-x-2 shrink-0">
           {exams.length > 0 && (
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (window.confirm('Apakah Anda yakin ingin menghapus SELURUH paket ujian? Semua soal dan data ujian akan terhapus.')) {
-                  clearAllExams();
+                  await clearAllExams();
                   onToast('Seluruh paket ujian telah berhasil dihapus.', 'info');
                   onRefresh();
                 }

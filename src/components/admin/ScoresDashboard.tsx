@@ -327,9 +327,9 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 shrink-0">
           {attempts.length > 0 && (
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (window.confirm('Apakah Anda yakin ingin menghapus SELURUH riwayat nilai ujian? Tindakan ini tidak dapat dibatalkan.')) {
-                  clearAllAttempts();
+                  await clearAllAttempts();
                   onToast('Seluruh riwayat nilai ujian telah berhasil dihapus.', 'info');
                   if (onRefresh) onRefresh();
                 }

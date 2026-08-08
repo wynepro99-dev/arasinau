@@ -8,6 +8,7 @@ let memoryExams: ExamPackage[] = [...INITIAL_EXAMS];
 let memoryQuestions: Question[] = [...INITIAL_QUESTIONS];
 let memoryAttempts: ExamAttempt[] = [...INITIAL_ATTEMPTS];
 let memoryCurrentUser: User | null = null;
+let isPerformingDelete = false;
 
 let globalIdSeq = 1;
 function generateUniqueId(prefix: string): string {
@@ -111,6 +112,9 @@ export function startSupabaseAutoSync(onDataChange?: () => void) {
 
 // --- SUPABASE SYNC OPERATIONS ---
 export async function syncFromSupabase(): Promise<{ success: boolean; message: string }> {
+  if (isPerformingDelete) {
+    return { success: true, message: 'Sync bypassed during deletion operation.' };
+  }
   const client = getSupabaseClient();
   if (!client) {
     return { success: false, message: 'Supabase URL/Key belum dikonfigurasi.' };
@@ -518,6 +522,7 @@ export function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: st
 }
 
 export async function deleteExam(examId: string): Promise<void> {
+  isPerformingDelete = true;
   memoryExams = memoryExams.filter(e => e.id !== examId);
   memoryQuestions = memoryQuestions.filter(q => q.examId !== examId);
   memoryAttempts = memoryAttempts.filter(a => a.examId !== examId);
@@ -531,7 +536,11 @@ export async function deleteExam(examId: string): Promise<void> {
       await client.from('exam_packages').delete().eq('id', examId);
     } catch (e) {
       console.error('Error deleting exam and children from Supabase:', e);
+    } finally {
+      isPerformingDelete = false;
     }
+  } else {
+    isPerformingDelete = false;
   }
 }
 
@@ -588,6 +597,7 @@ export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): 
 }
 
 export async function deleteQuestion(questionId: string): Promise<void> {
+  isPerformingDelete = true;
   memoryQuestions = memoryQuestions.filter(q => q.id !== questionId);
   const client = getSupabaseClient();
   if (client) {
@@ -595,7 +605,11 @@ export async function deleteQuestion(questionId: string): Promise<void> {
       await client.from('questions').delete().eq('id', questionId);
     } catch (e) {
       console.error(e);
+    } finally {
+      isPerformingDelete = false;
     }
+  } else {
+    isPerformingDelete = false;
   }
 }
 
@@ -684,47 +698,77 @@ export function updateAttempt(updatedAttempt: ExamAttempt): ExamAttempt {
   return updatedAttempt;
 }
 
-export function clearAllExams(): void {
+export async function clearAllExams(): Promise<void> {
+  isPerformingDelete = true;
   memoryExams = [];
   memoryQuestions = [];
   memoryAttempts = [];
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('exam_attempts').delete().neq('id', '');
-        await client.from('questions').delete().neq('id', '');
-        await client.from('exam_packages').delete().neq('id', '');
-      } catch (e) {
-        console.error('Error clearing all exams and children from Supabase:', e);
-      }
-    })();
+    try {
+      await client.from('exam_attempts').delete().neq('id', '');
+      await client.from('questions').delete().neq('id', '');
+      await client.from('exam_packages').delete().neq('id', '');
+    } catch (e) {
+      console.error('Error clearing all exams and children from Supabase:', e);
+    } finally {
+      isPerformingDelete = false;
+    }
+  } else {
+    isPerformingDelete = false;
   }
 }
 
-export function clearAllQuestions(): void {
+export async function clearAllQuestions(): Promise<void> {
+  isPerformingDelete = true;
   memoryQuestions = [];
   const client = getSupabaseClient();
   if (client) {
-    Promise.resolve(client.from('questions').delete().neq('id', '')).catch(() => {});
+    try {
+      await client.from('questions').delete().neq('id', '');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      isPerformingDelete = false;
+    }
+  } else {
+    isPerformingDelete = false;
   }
 }
 
-export function clearAllAttempts(): void {
+export async function clearAllAttempts(): Promise<void> {
+  isPerformingDelete = true;
   memoryAttempts = [];
   const client = getSupabaseClient();
   if (client) {
-    Promise.resolve(client.from('exam_attempts').delete().neq('id', '')).catch(() => {});
+    try {
+      await client.from('exam_attempts').delete().neq('id', '');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      isPerformingDelete = false;
+    }
+  } else {
+    isPerformingDelete = false;
   }
 }
 
-export function clearAllQuestionsAndAttempts(): void {
+export async function clearAllQuestionsAndAttempts(): Promise<void> {
+  isPerformingDelete = true;
   memoryQuestions = [];
   memoryAttempts = [];
   const client = getSupabaseClient();
   if (client) {
-    Promise.resolve(client.from('questions').delete().neq('id', '')).catch(() => {});
-    Promise.resolve(client.from('exam_attempts').delete().neq('id', '')).catch(() => {});
+    try {
+      await client.from('questions').delete().neq('id', '');
+      await client.from('exam_attempts').delete().neq('id', '');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      isPerformingDelete = false;
+    }
+  } else {
+    isPerformingDelete = false;
   }
 }
 
