@@ -410,7 +410,7 @@ export async function registerUser(newUser: Omit<User, 'id'>): Promise<User> {
 }
 
 export async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
-  const idx = memoryUsers.findIndex(u => u.id === userId);
+  const idx = memoryUsers.findIndex(u => u.id === userId || (updates.email && u.email.toLowerCase() === updates.email.toLowerCase()));
   if (idx === -1) {
     throw new Error('User tidak ditemukan.');
   }
@@ -419,13 +419,14 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
   memoryUsers[idx] = updated;
 
   // If this is the current logged-in user, sync the current user state
-  if (memoryCurrentUser && memoryCurrentUser.id === userId) {
+  if (memoryCurrentUser && (memoryCurrentUser.id === userId || memoryCurrentUser.email.toLowerCase() === updated.email.toLowerCase())) {
     saveSessionUser(updated);
   }
 
   const client = getSupabaseClient();
   if (client) {
-    const { error } = await client.from('users').update({
+    // 1. Try update by email (unique identifier) with .select() verification
+    const { data: emailRows, error: emailErr } = await client.from('users').update({
       name: updated.name,
       email: updated.email,
       password: updated.password,
@@ -433,10 +434,31 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
       department: updated.department,
       avatar: updated.avatar,
       company: updated.company || 'BANK'
-    }).eq('id', userId);
+    }).eq('email', updated.email).select();
 
-    if (error) {
-      throw new Error(`Gagal menyimpan perubahan ke database: ${error.message}`);
+    if (emailErr) {
+      throw new Error(`Gagal menyimpan perubahan ke database: ${emailErr.message}`);
+    }
+
+    // 2. If no rows matched by email, fallback to update by id
+    if (!emailRows || emailRows.length === 0) {
+      const { data: idRows, error: idErr } = await client.from('users').update({
+        name: updated.name,
+        email: updated.email,
+        password: updated.password,
+        role: updated.role,
+        department: updated.department,
+        avatar: updated.avatar,
+        company: updated.company || 'BANK'
+      }).eq('id', userId).select();
+
+      if (idErr) {
+        throw new Error(`Gagal menyimpan perubahan ke database: ${idErr.message}`);
+      }
+
+      if (!idRows || idRows.length === 0) {
+        throw new Error('Data user tidak ditemukan di database Supabase.');
+      }
     }
   }
 

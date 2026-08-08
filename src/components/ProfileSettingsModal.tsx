@@ -70,7 +70,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       };
 
       if (password) {
-        updates.password = password;
+        updates.password = password.trim();
       }
 
       const updated = await updateUser(currentUser.id, updates);

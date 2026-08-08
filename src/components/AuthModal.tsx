@@ -68,13 +68,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       try {
         const client = getSupabaseClient();
         if (client) {
-          const { data: dbUser, error } = await client
+          let dbUser = null;
+
+          // 1. Try query by email first (unique constraint)
+          const { data: byEmail, error: emailErr } = await client
             .from('users')
             .select('*')
-            .eq('id', found.id)
+            .eq('email', found.email)
             .maybeSingle();
 
-          if (!error && dbUser) {
+          if (!emailErr && byEmail) {
+            dbUser = byEmail;
+          } else {
+            // 2. Fallback query by id
+            const { data: byId, error: idErr } = await client
+              .from('users')
+              .select('*')
+              .eq('id', found.id)
+              .maybeSingle();
+            if (!idErr && byId) {
+              dbUser = byId;
+            }
+          }
+
+          if (dbUser) {
             latestUser = {
               id: dbUser.id,
               name: dbUser.name,
