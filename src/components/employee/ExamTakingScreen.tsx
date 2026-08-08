@@ -135,10 +135,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
     }
   }, [timeLeftSeconds, currentUser.id, exam.id]);
 
-  const submitRef = React.useRef(handleFinalSubmit);
-  useEffect(() => {
-    submitRef.current = handleFinalSubmit;
-  }, [handleFinalSubmit]);
+
 
   // Countdown timer effect
   useEffect(() => {
