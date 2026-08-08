@@ -12,12 +12,19 @@ body.loading-active {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #020617; /* Latar belakang slate-950 gelap mewah matching web app */
+    background-color: #ffffff; /* Latar belakang putih bersih default (mode terang) */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 99999; /* Memastikan selalu berada di lapisan paling atas */
     transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.6s;
+}
+
+/* Media query untuk mendeteksi mode gelap sistem */
+@media (prefers-color-scheme: dark) {
+    #meta-loading-screen {
+        background-color: #020617; /* Latar belakang slate-950 gelap mewah (mode gelap) */
+    }
 }
 
 /* Animasi untuk logo */
