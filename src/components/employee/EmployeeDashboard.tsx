@@ -62,8 +62,12 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       {/* Welcome & Personal Stats Banner - Clean iOS Light Card (Adaptive Instagram Dark) */}
       <div className="bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm shadow-slate-100/50 dark:shadow-none space-y-4 transition-colors duration-200">
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-2xl bg-indigo-50 dark:bg-zinc-800 text-indigo-700 dark:text-zinc-200 border border-indigo-100 dark:border-zinc-700 shadow-sm flex items-center justify-center font-bold text-base sm:text-lg shrink-0">
-            {currentUser.name.substring(0, 2).toUpperCase()}
+          <div className="w-12 sm:w-14 h-12 sm:h-14 rounded-2xl bg-indigo-50 dark:bg-zinc-800 text-indigo-700 dark:text-zinc-200 border border-indigo-100 dark:border-zinc-700 shadow-sm flex items-center justify-center font-bold text-base sm:text-lg shrink-0 overflow-hidden">
+            {currentUser.avatar ? (
+              <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              currentUser.name.substring(0, 2).toUpperCase()
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
