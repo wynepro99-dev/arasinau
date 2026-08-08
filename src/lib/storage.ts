@@ -541,8 +541,13 @@ export async function deleteExam(examId: string): Promise<{ success: boolean; er
       const { error: errQuestions } = await client.from('questions').delete().eq('exam_id', examId);
       if (errQuestions) throw new Error(`Gagal menghapus soal: ${errQuestions.message}`);
 
-      const { error: errExams } = await client.from('exam_packages').delete().eq('id', examId);
+      // We append .select() here to verify if the row was actually deleted or blocked by RLS policies
+      const { data: deletedExams, error: errExams } = await client.from('exam_packages').delete().eq('id', examId).select();
       if (errExams) throw new Error(`Gagal menghapus paket ujian: ${errExams.message}`);
+
+      if (!deletedExams || deletedExams.length === 0) {
+        throw new Error('Penghapusan ditolak oleh Supabase. Harap pastikan kebijakan keamanan (RLS) di tabel exam_packages mengizinkan aksi DELETE (jalankan "CREATE POLICY ... FOR ALL" atau matikan RLS).');
+      }
 
       return { success: true };
     } catch (e: any) {
@@ -739,8 +744,12 @@ export async function clearAllExams(): Promise<{ success: boolean; error?: strin
       const { error: errQuestions } = await client.from('questions').delete().neq('id', '');
       if (errQuestions) throw new Error(errQuestions.message);
 
-      const { error: errExams } = await client.from('exam_packages').delete().neq('id', '');
+      const { data: deletedExams, error: errExams } = await client.from('exam_packages').delete().neq('id', '').select();
       if (errExams) throw new Error(errExams.message);
+
+      if (prevExams.length > 0 && (!deletedExams || deletedExams.length === 0)) {
+        throw new Error('Penghapusan ditolak oleh Supabase. Harap pastikan kebijakan keamanan (RLS) di tabel exam_packages mengizinkan aksi DELETE.');
+      }
 
       return { success: true };
     } catch (e: any) {
