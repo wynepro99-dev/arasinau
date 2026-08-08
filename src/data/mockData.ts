@@ -14,8 +14,8 @@ const RAW_INITIAL_USERS: User[] = [
     id: 'user-pm-1',
     name: 'Della Ananto',
     email: 'della.ananto@arasinau.co.id',
-    password: '123456',
-    role: 'karyawan',
+    password: 'rahasia1',
+    role: 'admin',
     department: 'Project Manager (PM)'
   },
   {
