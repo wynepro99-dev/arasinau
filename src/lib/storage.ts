@@ -521,8 +521,12 @@ export function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: st
   return saved;
 }
 
-export async function deleteExam(examId: string): Promise<void> {
+export async function deleteExam(examId: string): Promise<{ success: boolean; error?: string }> {
   isPerformingDelete = true;
+  const prevExams = [...memoryExams];
+  const prevQuestions = [...memoryQuestions];
+  const prevAttempts = [...memoryAttempts];
+
   memoryExams = memoryExams.filter(e => e.id !== examId);
   memoryQuestions = memoryQuestions.filter(q => q.examId !== examId);
   memoryAttempts = memoryAttempts.filter(a => a.examId !== examId);
@@ -531,16 +535,28 @@ export async function deleteExam(examId: string): Promise<void> {
   if (client) {
     try {
       // Delete child rows first to prevent Foreign Key constraint violations
-      await client.from('exam_attempts').delete().eq('exam_id', examId);
-      await client.from('questions').delete().eq('exam_id', examId);
-      await client.from('exam_packages').delete().eq('id', examId);
-    } catch (e) {
+      const { error: errAttempts } = await client.from('exam_attempts').delete().eq('exam_id', examId);
+      if (errAttempts) throw new Error(`Gagal menghapus riwayat: ${errAttempts.message}`);
+
+      const { error: errQuestions } = await client.from('questions').delete().eq('exam_id', examId);
+      if (errQuestions) throw new Error(`Gagal menghapus soal: ${errQuestions.message}`);
+
+      const { error: errExams } = await client.from('exam_packages').delete().eq('id', examId);
+      if (errExams) throw new Error(`Gagal menghapus paket ujian: ${errExams.message}`);
+
+      return { success: true };
+    } catch (e: any) {
       console.error('Error deleting exam and children from Supabase:', e);
+      memoryExams = prevExams;
+      memoryQuestions = prevQuestions;
+      memoryAttempts = prevAttempts;
+      return { success: false, error: e.message || 'Gagal menghapus di database.' };
     } finally {
       isPerformingDelete = false;
     }
   } else {
     isPerformingDelete = false;
+    return { success: true };
   }
 }
 
@@ -596,20 +612,27 @@ export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): 
   return saved;
 }
 
-export async function deleteQuestion(questionId: string): Promise<void> {
+export async function deleteQuestion(questionId: string): Promise<{ success: boolean; error?: string }> {
   isPerformingDelete = true;
+  const prevQuestions = [...memoryQuestions];
   memoryQuestions = memoryQuestions.filter(q => q.id !== questionId);
+  
   const client = getSupabaseClient();
   if (client) {
     try {
-      await client.from('questions').delete().eq('id', questionId);
-    } catch (e) {
-      console.error(e);
+      const { error } = await client.from('questions').delete().eq('id', questionId);
+      if (error) throw new Error(error.message);
+      return { success: true };
+    } catch (e: any) {
+      console.error('deleteQuestion error:', e);
+      memoryQuestions = prevQuestions;
+      return { success: false, error: e.message || 'Gagal menghapus soal di database.' };
     } finally {
       isPerformingDelete = false;
     }
   } else {
     isPerformingDelete = false;
+    return { success: true };
   }
 }
 
@@ -698,24 +721,40 @@ export function updateAttempt(updatedAttempt: ExamAttempt): ExamAttempt {
   return updatedAttempt;
 }
 
-export async function clearAllExams(): Promise<void> {
+export async function clearAllExams(): Promise<{ success: boolean; error?: string }> {
   isPerformingDelete = true;
+  const prevExams = [...memoryExams];
+  const prevQuestions = [...memoryQuestions];
+  const prevAttempts = [...memoryAttempts];
+
   memoryExams = [];
   memoryQuestions = [];
   memoryAttempts = [];
   const client = getSupabaseClient();
   if (client) {
     try {
-      await client.from('exam_attempts').delete().neq('id', '');
-      await client.from('questions').delete().neq('id', '');
-      await client.from('exam_packages').delete().neq('id', '');
-    } catch (e) {
+      const { error: errAttempts } = await client.from('exam_attempts').delete().neq('id', '');
+      if (errAttempts) throw new Error(errAttempts.message);
+
+      const { error: errQuestions } = await client.from('questions').delete().neq('id', '');
+      if (errQuestions) throw new Error(errQuestions.message);
+
+      const { error: errExams } = await client.from('exam_packages').delete().neq('id', '');
+      if (errExams) throw new Error(errExams.message);
+
+      return { success: true };
+    } catch (e: any) {
       console.error('Error clearing all exams and children from Supabase:', e);
+      memoryExams = prevExams;
+      memoryQuestions = prevQuestions;
+      memoryAttempts = prevAttempts;
+      return { success: false, error: e.message || 'Gagal membersihkan database.' };
     } finally {
       isPerformingDelete = false;
     }
   } else {
     isPerformingDelete = false;
+    return { success: true };
   }
 }
 

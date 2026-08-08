@@ -141,8 +141,12 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
 
   const handleDelete = async (examId: string, examTitle: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus paket ujian "${examTitle}" beserta seluruh soalnya?`)) {
-      await deleteExam(examId);
-      onToast(`Paket ujian "${examTitle}" telah dihapus.`, 'info');
+      const res = await deleteExam(examId);
+      if (res.success) {
+        onToast(`Paket ujian "${examTitle}" telah dihapus.`, 'info');
+      } else {
+        onToast(`Gagal menghapus paket ujian: ${res.error}`, 'error');
+      }
       onRefresh();
     }
   };
@@ -164,8 +168,12 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
             <button
               onClick={async () => {
                 if (window.confirm('Apakah Anda yakin ingin menghapus SELURUH paket ujian? Semua soal dan data ujian akan terhapus.')) {
-                  await clearAllExams();
-                  onToast('Seluruh paket ujian telah berhasil dihapus.', 'info');
+                  const res = await clearAllExams();
+                  if (res.success) {
+                    onToast('Seluruh paket ujian telah berhasil dihapus.', 'info');
+                  } else {
+                    onToast(`Gagal menghapus seluruh paket ujian: ${res.error}`, 'error');
+                  }
                   onRefresh();
                 }
               }}
