@@ -4,9 +4,9 @@ import { getSupabaseClient } from './supabase';
 
 // In-Memory Database Store (Tanpa keharusan localStorage)
 let memoryUsers: User[] = [...INITIAL_USERS];
-let memoryExams: ExamPackage[] = [...INITIAL_EXAMS];
-let memoryQuestions: Question[] = [...INITIAL_QUESTIONS];
-let memoryAttempts: ExamAttempt[] = [...INITIAL_ATTEMPTS];
+let memoryExams: ExamPackage[] = [];
+let memoryQuestions: Question[] = [];
+let memoryAttempts: ExamAttempt[] = [];
 let memoryCurrentUser: User | null = null;
 let isPerformingDelete = false;
 
