@@ -205,13 +205,8 @@ export default function App() {
       </main>
 
       <footer className="bg-white dark:bg-black border-t border-slate-200/80 dark:border-zinc-800/80 py-4 mt-8 text-center text-xs text-slate-500 dark:text-zinc-500 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p>© 2026 Ara Sinau Enterprise • Sistem Manajemen & Evaluasi Ujian Online</p>
-          <div className="flex items-center space-x-4 text-[11px] text-slate-500 dark:text-zinc-500">
-            <span>Standar Kelulusan: 70% - 80%</span>
-            <span>•</span>
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">Terhubung Realtime</span>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 flex justify-center">
+          <p>© 2026 Ara Sinau Enterprise</p>
         </div>
       </footer>
 
