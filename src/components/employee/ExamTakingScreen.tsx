@@ -79,24 +79,36 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState<number>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`exam_session_idx_${currentUser.id}_${exam.id}`);
-      return saved ? Number(saved) : 0;
+      try {
+        const saved = localStorage.getItem(`exam_session_idx_${currentUser.id}_${exam.id}`);
+        return saved ? Number(saved) : 0;
+      } catch {
+        return 0;
+      }
     }
     return 0;
   });
 
   const [userAnswers, setUserAnswers] = useState<Record<string, { answerId: string; essayText?: string; isFlaggedDoubt: boolean }>>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`exam_session_answers_${currentUser.id}_${exam.id}`);
-      return saved ? JSON.parse(saved) : {};
+      try {
+        const saved = localStorage.getItem(`exam_session_answers_${currentUser.id}_${exam.id}`);
+        return saved ? JSON.parse(saved) : {};
+      } catch {
+        return {};
+      }
     }
     return {};
   });
 
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`exam_session_time_${currentUser.id}_${exam.id}`);
-      return saved ? Number(saved) : exam.durationMinutes * 60;
+      try {
+        const saved = localStorage.getItem(`exam_session_time_${currentUser.id}_${exam.id}`);
+        return saved ? Number(saved) : exam.durationMinutes * 60;
+      } catch {
+        return exam.durationMinutes * 60;
+      }
     }
     return exam.durationMinutes * 60;
   });
@@ -160,21 +172,30 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   useEffect(() => {
     if (typeof window === 'undefined' || !window.BroadcastChannel) return;
     const channelName = `exam_tab_monitor_${exam.id}_${currentUser.id}`;
-    const channel = new BroadcastChannel(channelName);
-    
-    // Broadcast active status
-    channel.postMessage({ type: 'EXAM_OPEN' });
-    
-    channel.onmessage = (event) => {
-      if (event.data.type === 'EXAM_OPEN') {
-        channel.postMessage({ type: 'EXAM_DUPLICATE' });
-      } else if (event.data.type === 'EXAM_DUPLICATE') {
-        setIsDuplicateTab(true);
-      }
-    };
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel(channelName);
+      
+      // Broadcast active status
+      channel.postMessage({ type: 'EXAM_OPEN' });
+      
+      channel.onmessage = (event) => {
+        if (event.data.type === 'EXAM_OPEN') {
+          channel?.postMessage({ type: 'EXAM_DUPLICATE' });
+        } else if (event.data.type === 'EXAM_DUPLICATE') {
+          setIsDuplicateTab(true);
+        }
+      };
+    } catch (e) {
+      console.warn('BroadcastChannel block check failed:', e);
+    }
     
     return () => {
-      channel.close();
+      if (channel) {
+        try {
+          channel.close();
+        } catch (e) {}
+      }
     };
   }, [exam.id, currentUser.id]);
 
