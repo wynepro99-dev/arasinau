@@ -34,7 +34,7 @@ const AntiCheatText: React.FC<{ text: any }> = ({ text }) => {
   
   const lines = textStr.split('\n');
   return (
-    <>
+    <span translate="no" className="notranslate">
       {lines.map((line, lIdx) => {
         const words = line.split(' ');
         return (
@@ -65,7 +65,7 @@ const AntiCheatText: React.FC<{ text: any }> = ({ text }) => {
           </React.Fragment>
         );
       })}
-    </>
+    </span>
   );
 };
 
