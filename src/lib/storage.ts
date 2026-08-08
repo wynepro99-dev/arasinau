@@ -189,7 +189,7 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
     }
 
     // 4. Fetch questions
-    const { data: qData, error: qErr } = await client.from('questions').select('*');
+    const { data: qData, error: qErr } = await client.from('questions').select('*').order('id');
     if (!qErr && qData) {
       memoryQuestions = qData.map((q: any) => ({
         id: q.id,
@@ -571,7 +571,9 @@ export function getQuestions(): Question[] {
 }
 
 export function getQuestionsByExamId(examId: string): Question[] {
-  return memoryQuestions.filter(q => q.examId === examId);
+  return memoryQuestions
+    .filter(q => q.examId === examId)
+    .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): Question {
