@@ -29,7 +29,15 @@ export function setRuntimeSupabaseConfig(url: string, key: string) {
     }
   }
   if (url && key) {
-    supabaseInstance = createClient(url, key);
+    supabaseInstance = createClient(url, key, {
+      global: {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    });
   } else {
     supabaseInstance = null;
   }
@@ -41,7 +49,15 @@ export function getSupabaseClient(): SupabaseClient | null {
   const { url, key } = getSupabaseConfig();
   if (url && key) {
     try {
-      supabaseInstance = createClient(url, key);
+      supabaseInstance = createClient(url, key, {
+        global: {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
+      });
       return supabaseInstance;
     } catch (e) {
       console.error('Failed to initialize Supabase client:', e);
