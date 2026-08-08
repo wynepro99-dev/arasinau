@@ -205,13 +205,11 @@ export default function App() {
           id="meta-loading-screen" 
           className={loadingHidden ? 'hidden' : ''}
         >
-          <div className="loading-content">
-            <img 
-              src="https://antarrumeksaarta.vittoriaproperti.com/uploads/profile/d96a287d-a983-4e54-8719-b46c7a2f3694.png" 
-              alt="Antar Rumeksa Arta Logo" 
-              className="loading-logo" 
-            />
-          </div>
+          <img 
+            src="https://antarrumeksaarta.vittoriaproperti.com/uploads/profile/d96a287d-a983-4e54-8719-b46c7a2f3694.png" 
+            alt="Antar Rumeksa Arta Logo" 
+            className="loading-logo" 
+          />
         </div>
       )}
       

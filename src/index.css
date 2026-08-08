@@ -29,7 +29,10 @@ body.loading-active {
 
 /* Animasi untuk logo */
 .loading-logo {
-    width: 130px; /* Sesuaikan ukuran logo */
+    display: block;
+    margin: 0 auto;
+    width: 120px; /* Sesuaikan ukuran logo */
+    max-width: 80%; /* Menghindari logo melewati batas layar di HP sempit */
     height: auto;
     animation: smoothPulse 1.5s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
 }
