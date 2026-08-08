@@ -160,32 +160,30 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
                 </div>
               )}
               
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-2 -right-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-500 hover:scale-105 transition-all active:scale-95"
+              <label
+                htmlFor="avatar-upload"
+                className="absolute -bottom-2 -right-2 p-2 bg-indigo-600 text-white rounded-xl shadow-lg hover:bg-indigo-500 hover:scale-105 transition-all active:scale-95 cursor-pointer"
                 title="Pilih Foto Baru"
               >
                 <Camera className="w-4 h-4" />
-              </button>
+              </label>
             </div>
 
             <input
+              id="avatar-upload"
               type="file"
-              ref={fileInputRef}
               onChange={handleFileChange}
               accept="image/*"
               className="hidden"
             />
 
             <div className="flex items-center space-x-2 text-[10px]">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
+              <label
+                htmlFor="avatar-upload"
+                className="text-indigo-600 dark:text-indigo-400 hover:underline font-bold cursor-pointer"
               >
                 Pilih Berkas Foto
-              </button>
+              </label>
               {avatar && (
                 <>
                   <span className="text-slate-300 dark:text-zinc-700">•</span>
