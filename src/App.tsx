@@ -25,8 +25,20 @@ import { Toast } from './components/Toast';
 import { MobileBottomNav } from './components/MobileBottomNav';
 
 export default function App() {
-  const [currentUser, setCurrentUserTab] = useState<User | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [currentUser, setCurrentUserTab] = useState<User | null>(() => {
+    return getCurrentUser();
+  });
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const user = getCurrentUser();
+      if (user) {
+        if (user.role === 'karyawan') return 'employee_dashboard';
+        const savedTab = localStorage.getItem('ara_active_tab');
+        return savedTab || 'dashboard';
+      }
+    }
+    return 'dashboard';
+  });
 
   // Data State
   const [exams, setExams] = useState<ExamPackage[]>([]);
