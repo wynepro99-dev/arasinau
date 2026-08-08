@@ -551,7 +551,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
                   <span>
-                    {userAnswers[currentQ.id]?.essayText?.trim().split(/\s+/).filter(Boolean).length || 0} Kata
+                    {((userAnswers[currentQ.id]?.essayText || '').trim().split(/\s+/).filter(Boolean).length || 0)} Kata
                   </span>
                   {userAnswers[currentQ.id]?.essayText?.trim() ? (
                     <span className="text-emerald-400 font-semibold flex items-center space-x-1">
