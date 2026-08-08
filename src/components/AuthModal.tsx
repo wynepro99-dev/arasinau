@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { User, UserRole } from '../types';
 import { getUsers, registerUser, getUserUsername } from '../lib/storage';
 import { getSupabaseClient } from '../lib/supabase';
@@ -345,9 +346,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     );
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md animate-fade-in">
-      {content}
+  const modalOverlay = (
+    <div className="fixed inset-0 z-50 bg-slate-950/60 dark:bg-black/80 backdrop-blur-md overflow-y-auto">
+      <div className="flex min-h-full items-start justify-center p-4 sm:items-center sm:p-6 animate-fade-in">
+        {content}
+      </div>
     </div>
   );
+
+  return createPortal(modalOverlay, document.body);
 };
