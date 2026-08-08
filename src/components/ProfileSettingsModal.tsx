@@ -30,17 +30,53 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 2MB to keep Base64 size reasonable)
-    if (file.size > 2 * 1024 * 1024) {
-      onToast('Ukuran foto maksimal adalah 2MB.', 'error');
+    // We will resize the image automatically to keep the database lightweight
+    if (file.size > 5 * 1024 * 1024) {
+      onToast('Ukuran foto awal terlalu besar (maksimal 5MB).', 'error');
       return;
     }
 
     const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === 'string') {
-        setAvatar(reader.result);
-        onToast('Foto profil berhasil diunggah! Simpan untuk menerapkan.', 'info');
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Create canvas to resize image
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 300;
+        const MAX_HEIGHT = 300;
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions keeping aspect ratio
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // Draw and compress (0.8 quality webp)
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/webp', 0.8);
+          setAvatar(compressedBase64);
+          onToast('Foto profil berhasil diproses! Jangan lupa klik Simpan.', 'info');
+        }
+      };
+      img.onerror = () => {
+        onToast('Gagal memproses gambar.', 'error');
+      };
+      if (event.target?.result) {
+        img.src = event.target.result as string;
       }
     };
     reader.readAsDataURL(file);
