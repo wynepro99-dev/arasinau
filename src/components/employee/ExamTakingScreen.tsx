@@ -27,34 +27,40 @@ interface ExamTakingScreenProps {
 }
 
 // Invisible noise character injector to disrupt OCR/DOM-scanning AI sidebars (Gemini, Copilot, etc.)
-const AntiCheatText: React.FC<{ text: string }> = ({ text }) => {
-  if (!text) return null;
-  const lines = text.split('\n');
+const AntiCheatText: React.FC<{ text: any }> = ({ text }) => {
+  if (text === null || text === undefined) return null;
+  const textStr = String(text);
+  if (!textStr.trim()) return null;
+  
+  const lines = textStr.split('\n');
   return (
     <>
       {lines.map((line, lIdx) => {
         const words = line.split(' ');
         return (
           <React.Fragment key={lIdx}>
-            {words.map((word, wIdx) => (
-              <span key={wIdx} className="inline-block mr-1">
-                {word.split('').map((char, cIdx) => {
-                  const showNoise = (wIdx + cIdx) % 3 === 0;
-                  const noiseChars = ['x', 'z', 'q', 'y', '1', '7', '@', '#'];
-                  const noise = noiseChars[(wIdx + cIdx) % noiseChars.length];
-                  return (
-                    <React.Fragment key={cIdx}>
-                      {char}
-                      {showNoise && (
-                        <span className="absolute opacity-0 pointer-events-none select-none text-[0px] w-0 h-0 inline-block overflow-hidden" aria-hidden="true">
-                          {noise}
-                        </span>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </span>
-            ))}
+            {words.map((word, wIdx) => {
+              if (typeof word !== 'string') return null;
+              return (
+                <span key={wIdx} className="inline-block mr-1">
+                  {word.split('').map((char, cIdx) => {
+                    const showNoise = (wIdx + cIdx) % 3 === 0;
+                    const noiseChars = ['x', 'z', 'q', 'y', '1', '7', '@', '#'];
+                    const noise = noiseChars[(wIdx + cIdx) % noiseChars.length];
+                    return (
+                      <React.Fragment key={cIdx}>
+                        {char}
+                        {showNoise && (
+                          <span className="absolute opacity-0 pointer-events-none select-none text-[0px] w-0 h-0 inline-block overflow-hidden" aria-hidden="true">
+                            {noise}
+                          </span>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </span>
+              );
+            })}
             {lIdx < lines.length - 1 && <br />}
           </React.Fragment>
         );
@@ -547,14 +553,21 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 
               {/* Option Selection List */}
               <div className="space-y-3">
-                {currentQ.options.map((opt, idx) => {
-                  const letters = ['A', 'B', 'C', 'D'];
-                  const isSelected = userAnswers[currentQ.id]?.answerId === opt.id;
+                {(() => {
+                  const safeOptions = Array.isArray(currentQ?.options)
+                    ? currentQ.options
+                    : (typeof currentQ?.options === 'string'
+                        ? (() => { try { return JSON.parse(currentQ.options); } catch { return []; } })()
+                        : []);
+                  return safeOptions.map((opt, idx) => {
+                    if (!opt) return null;
+                    const letters = ['A', 'B', 'C', 'D'];
+                    const isSelected = userAnswers[currentQ.id]?.answerId === opt.id;
 
-                  return (
-                    <button
-                      key={`opt-${currentQ.id}-${opt.id}-${idx}`}
-                      onClick={() => handleSelectOption(opt.id)}
+                    return (
+                      <button
+                        key={`opt-${currentQ.id}-${opt.id}-${idx}`}
+                        onClick={() => handleSelectOption(opt.id)}
                       className={`w-full text-left p-4 rounded-xl border text-xs md:text-sm font-medium transition-all flex items-center justify-between group ${
                         isSelected
                           ? 'bg-emerald-500/10 border-emerald-500 text-emerald-200 font-semibold shadow-md'
@@ -579,7 +592,8 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
                       )}
                     </button>
                   );
-                })}
+                });
+              })()}
               </div>
             </>
           )}
