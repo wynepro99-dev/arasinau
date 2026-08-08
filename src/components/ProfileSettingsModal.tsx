@@ -127,7 +127,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
       <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-100 flex flex-col max-h-[90vh] animate-scale-in">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-zinc-950 border-b border-slate-100 dark:border-zinc-800">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-zinc-950 border-b border-slate-100 dark:border-zinc-800">
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Pengaturan Akun & Profil</h2>
             <p className="text-[10px] text-slate-400 dark:text-zinc-500">Sesuaikan foto profil dan kata sandi Anda</p>
@@ -144,7 +144,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
           
           {/* Avatar Upload Section */}
-          <div className="flex flex-col items-center space-y-3 pb-4 border-b border-slate-100 dark:border-zinc-850">
+          <div className="shrink-0 flex flex-col items-center space-y-3 pb-4 border-b border-slate-100 dark:border-zinc-850">
             <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 self-start">Foto Profil</label>
             
             <div className="relative group">
