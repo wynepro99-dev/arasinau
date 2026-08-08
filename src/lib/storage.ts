@@ -118,7 +118,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
       password: u.password || '123456',
       role: u.role,
       department: u.department,
-      avatar: u.avatar
+      avatar: u.avatar,
+      company: u.company || 'BANK'
     }));
 
     const { error: upsertUserErr } = await client.from('users').upsert(formattedUsersToUpsert, { onConflict: 'email' });
@@ -141,7 +142,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
           password: u.password || '123456',
           role: u.role,
           department: u.department,
-          avatar: u.avatar
+          avatar: u.avatar,
+          company: u.company || 'BANK'
         });
       }
       memoryUsers = Array.from(mergedMap.values());
@@ -165,7 +167,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
             passingScore: e.passing_score,
             createdAt: e.created_at,
             status: e.status,
-            authorName: e.author_name
+            authorName: e.author_name,
+            scope: e.scope || 'BANK'
           });
         });
       }
@@ -180,7 +183,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
         passing_score: e.passingScore,
         created_at: e.createdAt,
         status: e.status,
-        author_name: e.authorName
+        author_name: e.authorName,
+        scope: e.scope || 'BANK'
       }));
       if (formattedExams.length > 0) {
         await client.from('exam_packages').upsert(formattedExams, { onConflict: 'id' });
@@ -204,7 +208,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
             explanation: q.explanation,
             points: q.points,
             caseStudyStory: q.case_study_story || q.caseStudyStory || '',
-            sampleAnswer: q.sample_answer || q.sampleAnswer || ''
+            sampleAnswer: q.sample_answer || q.sampleAnswer || '',
+            scope: q.scope || 'BANK'
           });
         });
       }
@@ -220,7 +225,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
         explanation: q.explanation,
         points: q.points,
         case_study_story: q.caseStudyStory || '',
-        sample_answer: q.sampleAnswer || ''
+        sample_answer: q.sampleAnswer || '',
+        scope: q.scope || 'BANK'
       }));
       if (formattedQuestions.length > 0) {
         await client.from('questions').upsert(formattedQuestions, { onConflict: 'id' });
@@ -309,7 +315,8 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
       password: u.password || '123456',
       role: u.role,
       department: u.department,
-      avatar: u.avatar
+      avatar: u.avatar,
+      company: u.company || 'BANK'
     }));
     await client.from('users').upsert(formattedUsers, { onConflict: 'email' });
 
@@ -323,7 +330,8 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
       passing_score: e.passingScore,
       created_at: e.createdAt,
       status: e.status,
-      author_name: e.authorName
+      author_name: e.authorName,
+      scope: e.scope || 'BANK'
     }));
     if (formattedExams.length > 0) {
       await client.from('exam_packages').upsert(formattedExams, { onConflict: 'id' });
@@ -340,7 +348,8 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
       explanation: q.explanation,
       points: q.points,
       case_study_story: q.caseStudyStory || '',
-      sample_answer: q.sampleAnswer || ''
+      sample_answer: q.sampleAnswer || '',
+      scope: q.scope || 'BANK'
     }));
     if (formattedQuestions.length > 0) {
       await client.from('questions').upsert(formattedQuestions, { onConflict: 'id' });
@@ -462,7 +471,8 @@ export function registerUser(newUser: Omit<User, 'id'>): User {
           password: createdUser.password,
           role: createdUser.role,
           department: createdUser.department,
-          avatar: createdUser.avatar
+          avatar: createdUser.avatar,
+          company: createdUser.company || 'BANK'
         });
       } catch (e) {
         console.error(e);
@@ -517,7 +527,8 @@ export function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: st
           passing_score: saved.passingScore,
           created_at: saved.createdAt,
           status: saved.status,
-          author_name: saved.authorName
+          author_name: saved.authorName,
+          scope: saved.scope || 'BANK'
         }, { onConflict: 'id' });
       } catch (e) {
         console.error(e);
@@ -587,7 +598,8 @@ export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): 
           explanation: saved.explanation,
           points: saved.points,
           case_study_story: saved.caseStudyStory || '',
-          sample_answer: saved.sampleAnswer || ''
+          sample_answer: saved.sampleAnswer || '',
+          scope: saved.scope || 'BANK'
         }, { onConflict: 'id' });
       } catch (e) {
         console.error(e);

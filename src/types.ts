@@ -8,6 +8,7 @@ export interface User {
   role: UserRole;
   department: string;
   avatar?: string;
+  company?: 'BANK' | 'SEC'; // BANK = Bank, SEC = Bimbel
 }
 
 export type QuestionType = 'multiple_choice' | 'true_false' | 'case_study' | 'essay';
@@ -28,6 +29,7 @@ export interface Question {
   points: number;
   caseStudyStory?: string; // Cerita/skenario/narasi studi kasus
   sampleAnswer?: string; // Acuan kunci jawaban / rubrik penilaian essay
+  scope?: 'BANK' | 'SEC' | 'ALL';
 }
 
 export interface ExamPackage {
@@ -40,6 +42,7 @@ export interface ExamPackage {
   createdAt: string;
   status: 'active' | 'draft' | 'closed';
   authorName: string;
+  scope?: 'BANK' | 'SEC' | 'ALL';
 }
 
 export interface AttemptAnswer {

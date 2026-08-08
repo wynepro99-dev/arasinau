@@ -32,6 +32,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [regPassword, setRegPassword] = useState('');
   const [regRole, setRegRole] = useState<UserRole>('karyawan');
   const [regDepartment, setRegDepartment] = useState('IT & Technology');
+  const [regCompany, setRegCompany] = useState<'BANK' | 'SEC'>('BANK');
 
   if (!isOpen && !isInlineScreen) return null;
 
@@ -80,7 +81,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         name: regName.trim(),
         email: regEmail.trim(),
         role: regRole,
-        department: regDepartment
+        department: regDepartment,
+        company: regCompany
       });
       onLoginSuccess(created);
       onToast(`Akun berhasil dibuat!`, 'success');
@@ -160,7 +162,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <option value="" className="dark:bg-zinc-900">-- Pilih Akun Personel ({allUsers.length}) --</option>
                 {allUsers.map((u) => (
                   <option key={u.id} value={u.email} className="dark:bg-zinc-900">
-                    {u.name} • {u.department}
+                    {u.name} • {u.department} [{u.company || 'BANK'}]
                   </option>
                 ))}
               </select>
@@ -259,6 +261,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <option value="Finance & Accounting" className="dark:bg-zinc-900">Finance</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Perusahaan / Scope</label>
+              <select
+                value={regCompany}
+                onChange={(e) => setRegCompany(e.target.value as 'BANK' | 'SEC')}
+                className="w-full py-2.5 px-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
+              >
+                <option value="BANK" className="dark:bg-zinc-900">BANK (Bank Utama)</option>
+                <option value="SEC" className="dark:bg-zinc-900">SEC (Bimbel Anak Perusahaan)</option>
+              </select>
             </div>
 
             <button

@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   role TEXT NOT NULL DEFAULT 'karyawan',
   department TEXT,
   avatar TEXT,
+  company TEXT NOT NULL DEFAULT 'BANK',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -74,7 +75,8 @@ CREATE TABLE IF NOT EXISTS public.exam_packages (
   passing_score INT DEFAULT 70,
   created_at TEXT,
   status TEXT DEFAULT 'active',
-  author_name TEXT
+  author_name TEXT,
+  scope TEXT NOT NULL DEFAULT 'BANK'
 );
 
 -- Table 3: Questions (Soal Ujian)
@@ -86,7 +88,8 @@ CREATE TABLE IF NOT EXISTS public.questions (
   options JSONB NOT NULL,
   correct_answer_id TEXT NOT NULL,
   explanation TEXT,
-  points INT DEFAULT 25
+  points INT DEFAULT 25,
+  scope TEXT NOT NULL DEFAULT 'BANK'
 );
 
 -- Table 4: Exam Attempts (Hasil & Riwayat Ujian)

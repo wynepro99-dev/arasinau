@@ -43,6 +43,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
   const [correctAnswerId, setCorrectAnswerId] = useState('opt-a');
   const [explanation, setExplanation] = useState('');
   const [points, setPoints] = useState(25);
+  const [qScope, setQScope] = useState<'BANK' | 'SEC' | 'ALL'>('BANK');
 
   if (!isOpen) return null;
 
@@ -61,6 +62,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     setCorrectAnswerId('opt-a');
     setExplanation('');
     setPoints(25);
+    setQScope('BANK');
   };
 
   const handleEditClick = (q: Question) => {
@@ -78,6 +80,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     setCorrectAnswerId(q.correctAnswerId);
     setExplanation(q.explanation || '');
     setPoints(q.points);
+    setQScope(q.scope || exam.scope || 'BANK');
     setActiveTab('create');
   };
 
@@ -126,7 +129,8 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
       options: finalOptions,
       correctAnswerId: finalCorrectAnswerId,
       explanation: explanation.trim(),
-      points: Number(points)
+      points: Number(points),
+      scope: qScope
     });
 
     onToast(editingQuestionId ? 'Soal berhasil diperbarui!' : 'Soal baru berhasil ditambahkan!', 'success');
@@ -223,6 +227,15 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                           }`}>
                             {q.type === 'case_study' ? 'Studi Kasus & Essay' : q.type === 'essay' ? 'Soal Essay' : q.type === 'true_false' ? 'Benar / Salah' : 'Pilihan Ganda'}
                           </span>
+                          <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border uppercase tracking-wider ${
+                            q.scope === 'SEC'
+                              ? 'bg-purple-100/70 border-purple-200 text-purple-700'
+                              : q.scope === 'ALL'
+                              ? 'bg-blue-100/70 border-blue-200 text-blue-700'
+                              : 'bg-emerald-100/70 border-emerald-200 text-emerald-700'
+                          }`}>
+                            Scope: {q.scope || 'BANK'}
+                          </span>
                           <span className="text-[10px] font-semibold text-slate-400">• {q.points} Poin</span>
                         </div>
 
@@ -299,7 +312,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
           {/* TAB 2: CREATE/EDIT QUESTION */}
           {activeTab === 'create' && (
             <form onSubmit={handleSaveQuestion} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Tipe Soal</label>
                   <select
@@ -334,6 +347,19 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                     onChange={(e) => setPoints(Number(e.target.value))}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Keperluan Soal / Scope</label>
+                  <select
+                    value={qScope}
+                    onChange={(e) => setQScope(e.target.value as 'BANK' | 'SEC' | 'ALL')}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 font-medium"
+                  >
+                    <option value="BANK">BANK (Bank Utama)</option>
+                    <option value="SEC">SEC (Bimbel Anak Perusahaan)</option>
+                    <option value="ALL">ALL (Semua Perusahaan)</option>
+                  </select>
                 </div>
               </div>
 

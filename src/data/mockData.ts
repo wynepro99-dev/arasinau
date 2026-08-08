@@ -1,6 +1,6 @@
 import { User, ExamPackage, Question, ExamAttempt } from '../types';
 
-export const INITIAL_USERS: User[] = [
+const RAW_INITIAL_USERS: User[] = [
   // Dewan Komisaris & Direksi
   {
     id: 'user-dir-1',
@@ -255,6 +255,55 @@ export const INITIAL_USERS: User[] = [
     password: '123456',
     role: 'karyawan',
     department: 'Collection'
+  }
+];
+
+export const INITIAL_USERS: User[] = [
+  ...RAW_INITIAL_USERS.map(u => ({ ...u, company: 'BANK' as const })),
+  {
+    id: 'user-sec-putri',
+    name: 'Putri',
+    email: 'putri@arasinau.co.id',
+    password: '123456',
+    role: 'karyawan',
+    department: 'SEC Bimbel',
+    company: 'SEC' as const
+  },
+  {
+    id: 'user-sec-fatima',
+    name: 'Fatima',
+    email: 'fatima@arasinau.co.id',
+    password: '123456',
+    role: 'karyawan',
+    department: 'SEC Bimbel',
+    company: 'SEC' as const
+  },
+  {
+    id: 'user-sec-khaila',
+    name: 'Khaila',
+    email: 'khaila@arasinau.co.id',
+    password: '123456',
+    role: 'karyawan',
+    department: 'SEC Bimbel',
+    company: 'SEC' as const
+  },
+  {
+    id: 'user-sec-jehan',
+    name: 'Jehan',
+    email: 'jehan@arasinau.co.id',
+    password: '123456',
+    role: 'karyawan',
+    department: 'SEC Bimbel',
+    company: 'SEC' as const
+  },
+  {
+    id: 'user-sec-neto',
+    name: 'Neto',
+    email: 'neto@arasinau.co.id',
+    password: '123456',
+    role: 'karyawan',
+    department: 'SEC Bimbel',
+    company: 'SEC' as const
   }
 ];
 

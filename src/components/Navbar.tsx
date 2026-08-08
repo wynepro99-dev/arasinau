@@ -165,8 +165,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <UserIcon className="w-4 h-4" />
                   </div>
                   <div className="hidden sm:block leading-tight">
-                    <div className="text-xs font-bold text-slate-800 dark:text-zinc-200">
-                      <span className="truncate max-w-[140px] block">{currentUser.name}</span>
+                    <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center space-x-1.5">
+                      <span className="truncate max-w-[120px] block">{currentUser.name}</span>
+                      <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded-md uppercase tracking-wider border ${
+                        currentUser.company === 'SEC'
+                          ? 'bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-purple-200/50 dark:border-purple-900/30'
+                          : 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/30'
+                      }`}>
+                        {currentUser.company || 'BANK'}
+                      </span>
                     </div>
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550" />

@@ -43,7 +43,13 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     ? Math.round(myAttempts.reduce((acc, curr) => acc + curr.score, 0) / totalTaken)
     : 0;
 
-  const availableExams = exams.filter(e => e.status === 'active' || e.status === 'closed');
+  const availableExams = exams.filter(e => {
+    const isStatusOk = e.status === 'active' || e.status === 'closed';
+    if (!isStatusOk) return false;
+    const userCompany = currentUser?.company || 'BANK';
+    const examScope = e.scope || 'BANK';
+    return examScope === 'ALL' || examScope === userCompany;
+  });
   const categories = Array.from(new Set(availableExams.map(e => e.category)));
 
   const filteredExams = availableExams.filter(e => 
