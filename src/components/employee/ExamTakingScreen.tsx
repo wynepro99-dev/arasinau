@@ -26,6 +26,43 @@ interface ExamTakingScreenProps {
   onToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
 }
 
+// Invisible noise character injector to disrupt OCR/DOM-scanning AI sidebars (Gemini, Copilot, etc.)
+const AntiCheatText: React.FC<{ text: string }> = ({ text }) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return (
+    <>
+      {lines.map((line, lIdx) => {
+        const words = line.split(' ');
+        return (
+          <React.Fragment key={lIdx}>
+            {words.map((word, wIdx) => (
+              <span key={wIdx} className="inline-block mr-1">
+                {word.split('').map((char, cIdx) => {
+                  const showNoise = (wIdx + cIdx) % 3 === 0;
+                  const noiseChars = ['x', 'z', 'q', 'y', '1', '7', '@', '#'];
+                  const noise = noiseChars[(wIdx + cIdx) % noiseChars.length];
+                  return (
+                    <React.Fragment key={cIdx}>
+                      {char}
+                      {showNoise && (
+                        <span className="absolute opacity-0 pointer-events-none select-none text-[0px] w-0 h-0 inline-block overflow-hidden" aria-hidden="true">
+                          {noise}
+                        </span>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </span>
+            ))}
+            {lIdx < lines.length - 1 && <br />}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
+};
+
 export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   currentUser,
   exam,
@@ -148,6 +185,55 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 
     return () => clearInterval(timer);
   }, [timeLeftSeconds]);
+
+  // Anti-cheat listeners to block right-click, copy, cut, drag, and standard clipboard keys
+  useEffect(() => {
+    const preventDefault = (e: Event) => e.preventDefault();
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block Ctrl+C, Cmd+C, Ctrl+X, Cmd+X, Ctrl+U, Cmd+U, Ctrl+S, Cmd+S, Ctrl+P, Cmd+P
+      if (
+        (e.ctrlKey || e.metaKey) && 
+        ['c', 'C', 'u', 'U', 's', 'S', 'x', 'X', 'p', 'P'].includes(e.key)
+      ) {
+        e.preventDefault();
+        onToast('🔒 Dilarang menyalin teks (Copy/Cut/Source) demi integritas ujian!', 'error');
+      }
+      // F12 and Ctrl+Shift+I/J/C
+      if (
+        e.key === 'F12' || 
+        (e.ctrlKey && e.shiftKey && ['i', 'I', 'j', 'J', 'c', 'C'].includes(e.key))
+      ) {
+        e.preventDefault();
+        onToast('🔒 Developer Tools dinonaktifkan!', 'error');
+      }
+    };
+
+    const handleCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      onToast('🔒 Dilarang keras menyalin soal ujian!', 'error');
+    };
+
+    document.addEventListener('contextmenu', preventDefault);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('cut', preventDefault);
+    document.addEventListener('dragstart', preventDefault);
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Disable text selection at DOM body level
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+
+    return () => {
+      document.removeEventListener('contextmenu', preventDefault);
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('cut', preventDefault);
+      document.removeEventListener('dragstart', preventDefault);
+      document.removeEventListener('keydown', handleKeyDown);
+      
+      document.body.style.userSelect = 'auto';
+      document.body.style.webkitUserSelect = 'auto';
+    };
+  }, [onToast]);
 
   const currentQ = questions[currentIndex];
 
@@ -381,7 +467,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
                     <span>Cerita / Skenario Studi Kasus</span>
                   </div>
                   <p className="text-xs md:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans">
-                    {currentQ.caseStudyStory}
+                    <AntiCheatText text={currentQ.caseStudyStory} />
                   </p>
                 </div>
               )}
@@ -390,7 +476,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
               <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl space-y-1">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Pertanyaan Essay / Instruksi Analisa:</span>
                 <h3 className="text-sm md:text-base font-semibold text-white leading-relaxed">
-                  {currentQ.questionText}
+                  <AntiCheatText text={currentQ.questionText} />
                 </h3>
               </div>
 
@@ -455,7 +541,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
             <>
               <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl">
                 <h3 className="text-sm md:text-base font-semibold text-white leading-relaxed">
-                  {currentQ.questionText}
+                  <AntiCheatText text={currentQ.questionText} />
                 </h3>
               </div>
 
@@ -483,7 +569,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
                         }`}>
                           {currentQ.type === 'true_false' ? (idx === 0 ? 'T' : 'F') : letters[idx]}
                         </span>
-                        <span className="leading-snug">{opt.text}</span>
+                        <span className="leading-snug"><AntiCheatText text={opt.text} /></span>
                       </div>
 
                       {isSelected && (

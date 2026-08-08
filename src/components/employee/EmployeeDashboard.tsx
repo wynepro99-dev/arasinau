@@ -48,7 +48,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     if (!isStatusOk) return false;
     const userCompany = currentUser?.company || 'BANK';
     const examScope = e.scope || 'BANK';
-    return examScope === 'ALL' || examScope === userCompany;
+    return userCompany === 'ALL' || examScope === 'ALL' || examScope === userCompany;
   });
   const categories = Array.from(new Set(availableExams.map(e => e.category)));
 
