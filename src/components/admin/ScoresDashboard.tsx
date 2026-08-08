@@ -40,6 +40,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
   const [deptFilter, setDeptFilter] = useState('all');
   const [examFilter, setExamFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [scopeFilter, setScopeFilter] = useState('all');
 
   // Detail Modal Inspection State
   const [activeAttemptDetail, setActiveAttemptDetail] = useState<ExamAttempt | null>(
@@ -281,7 +282,6 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
   // Unique filters data source
   const departments = Array.from(new Set(attempts.map((a) => a.userDepartment || 'Lainnya')));
 
-  // Filter calculations
   const filteredAttempts = attempts.filter((att) => {
     const matchesSearch = att.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           att.examTitle.toLowerCase().includes(searchTerm.toLowerCase());
@@ -292,7 +292,11 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     if (statusFilter === 'passed') matchesStatus = att.passed;
     if (statusFilter === 'failed') matchesStatus = !att.passed;
 
-    return matchesSearch && matchesDept && matchesExam && matchesStatus;
+    const activeExam = exams.find(e => e.id === att.examId);
+    const examScope = activeExam?.scope || 'BANK';
+    const matchesScope = scopeFilter === 'all' || examScope === scopeFilter;
+
+    return matchesSearch && matchesDept && matchesExam && matchesStatus && matchesScope;
   });
 
   const avgFilteredScore = filteredAttempts.length > 0
@@ -349,7 +353,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
       {/* Filter and Metrics Summary */}
       <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-4 rounded-2xl space-y-4 shadow-sm print:hidden">
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           
           {/* Search Name */}
           <div className="relative">
@@ -393,9 +397,21 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500"
           >
-            <option value="all" className="dark:bg-slate-900">Semua Status</option>
-            <option value="passed" className="dark:bg-slate-900">Hanya LULUS</option>
-            <option value="failed" className="dark:bg-slate-900">Hanya TIDAK LULUS</option>
+            <option value="all" className="dark:bg-zinc-900">Semua Status</option>
+            <option value="passed" className="dark:bg-zinc-900">Hanya LULUS</option>
+            <option value="failed" className="dark:bg-zinc-900">Hanya TIDAK LULUS</option>
+          </select>
+
+          {/* Scope Filter */}
+          <select
+            value={scopeFilter}
+            onChange={(e) => setScopeFilter(e.target.value)}
+            className="px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500"
+          >
+            <option value="all" className="dark:bg-zinc-900">Semua Scope</option>
+            <option value="BANK" className="dark:bg-zinc-900">ARA</option>
+            <option value="SEC" className="dark:bg-zinc-900">SEC</option>
+            <option value="ALL" className="dark:bg-zinc-900">ALL</option>
           </select>
 
         </div>
