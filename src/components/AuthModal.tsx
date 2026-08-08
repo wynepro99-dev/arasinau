@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
 import { getUsers, registerUser, getUserUsername } from '../lib/storage';
+import { getSupabaseClient } from '../lib/supabase';
 import { LOGO_URL } from './Navbar';
 import { X, Lock, Mail, User as UserIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
 
@@ -38,7 +39,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const allUsers = getUsers();
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = loginEmail.trim().toLowerCase();
     if (!query) {
@@ -59,14 +60,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({
              (isAll && alternateUsername === query) ||
              u.name.toLowerCase() === query;
     });
+
     if (found) {
-      const userPassword = found.password || '123456';
+      let latestUser = found;
+
+      // Query database directly to bypass sync lag and ensure the newest password is verified
+      try {
+        const client = getSupabaseClient();
+        if (client) {
+          const { data: dbUser, error } = await client
+            .from('users')
+            .select('*')
+            .eq('id', found.id)
+            .maybeSingle();
+
+          if (!error && dbUser) {
+            latestUser = {
+              id: dbUser.id,
+              name: dbUser.name,
+              email: dbUser.email,
+              password: dbUser.password || '123456',
+              role: dbUser.role,
+              department: dbUser.department,
+              avatar: dbUser.avatar,
+              company: dbUser.company || 'BANK'
+            };
+          }
+        }
+      } catch (e) {
+        console.warn('Direct database validation fallback:', e);
+      }
+
+      const userPassword = latestUser.password || '123456';
       if (loginPassword.trim() !== userPassword) {
-        onToast(`Kata sandi salah. Silakan periksa kembali kata sandi akun ${found.name}.`, 'error');
+        onToast(`Kata sandi salah. Silakan periksa kembali kata sandi akun ${latestUser.name}.`, 'error');
         return;
       }
-      onLoginSuccess(found);
-      onToast(`Selamat datang di Ara Sinau, ${found.name}!`, 'success');
+
+      // Update local memory user password with the verified password
+      const idx = currentUsers.findIndex(u => u.id === latestUser.id);
+      if (idx !== -1) {
+        currentUsers[idx] = latestUser;
+      }
+
+      onLoginSuccess(latestUser);
+      onToast(`Selamat datang di Ara Sinau, ${latestUser.name}!`, 'success');
       if (onClose) onClose();
     } else {
       onToast('Personel tidak ditemukan. Silakan pilih dari dropdown atau ketik email/nama.', 'error');
