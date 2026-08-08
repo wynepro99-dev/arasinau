@@ -600,11 +600,12 @@ export function deleteExam(examId: string): void {
   if (client) {
     (async () => {
       try {
-        await client.from('exam_packages').delete().eq('id', examId);
-        await client.from('questions').delete().eq('exam_id', examId);
+        // Delete child rows first to prevent Foreign Key constraint violations
         await client.from('exam_attempts').delete().eq('exam_id', examId);
+        await client.from('questions').delete().eq('exam_id', examId);
+        await client.from('exam_packages').delete().eq('id', examId);
       } catch (e) {
-        console.error(e);
+        console.error('Error deleting exam and children from Supabase:', e);
       }
     })();
   }
@@ -763,9 +764,19 @@ export function updateAttempt(updatedAttempt: ExamAttempt): ExamAttempt {
 
 export function clearAllExams(): void {
   memoryExams = [];
+  memoryQuestions = [];
+  memoryAttempts = [];
   const client = getSupabaseClient();
   if (client) {
-    Promise.resolve(client.from('exam_packages').delete().neq('id', '')).catch(() => {});
+    (async () => {
+      try {
+        await client.from('exam_attempts').delete().neq('id', '');
+        await client.from('questions').delete().neq('id', '');
+        await client.from('exam_packages').delete().neq('id', '');
+      } catch (e) {
+        console.error('Error clearing all exams and children from Supabase:', e);
+      }
+    })();
   }
 }
 
