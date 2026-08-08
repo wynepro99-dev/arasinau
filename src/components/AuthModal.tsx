@@ -42,7 +42,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     e.preventDefault();
     const query = loginEmail.trim().toLowerCase();
     if (!query) {
-      onToast('Silakan pilih dari daftar atau ketik email / nama personel.', 'error');
+      onToast('Silakan ketik username atau email Anda.', 'error');
       return;
     }
     if (!loginPassword.trim()) {
@@ -50,11 +50,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
     const currentUsers = getUsers();
-    const found = currentUsers.find(u => 
-      u.email.toLowerCase() === query || 
-      u.name.toLowerCase().includes(query) ||
-      u.email.toLowerCase().includes(query)
-    );
+    const found = currentUsers.find(u => {
+      const baseName = u.name.split(' ')[0].toLowerCase();
+      const scopeVal = (u.company || 'BANK').toLowerCase();
+      const usernameOption1 = `${baseName}.${scopeVal}`;
+      const usernameOption2 = `${baseName}${scopeVal}`;
+      
+      return u.email.toLowerCase() === query || 
+             usernameOption1 === query ||
+             usernameOption2 === query ||
+             u.name.toLowerCase() === query;
+    });
     if (found) {
       const userPassword = found.password || '123456';
       if (loginPassword.trim() !== userPassword) {
@@ -152,32 +158,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {mode === 'login' ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Pilih Personel / Pengguna</label>
-
-              <select
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full mb-2 px-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
-              >
-                <option value="" className="dark:bg-zinc-900">-- Pilih Akun Personel ({allUsers.length}) --</option>
-                {allUsers.map((u) => (
-                  <option key={u.id} value={u.email} className="dark:bg-zinc-900">
-                    {u.name} • {u.department} [{u.company || 'BANK'}]
-                  </option>
-                ))}
-              </select>
-
-              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Atau Ketik Email / Nama</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">Username atau Email</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                <UserIcon className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Ketik email atau nama..."
+                  placeholder="Format: nama.scope (contoh: putri.sec atau taka.bank)"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 transition-all font-medium"
+                  required
                 />
               </div>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1">
+                Gunakan format <strong className="text-indigo-600 dark:text-indigo-400 font-bold">[nama].[scope]</strong> untuk masuk.
+              </p>
             </div>
 
             <div>

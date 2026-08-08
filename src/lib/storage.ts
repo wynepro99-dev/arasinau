@@ -483,6 +483,42 @@ export function registerUser(newUser: Omit<User, 'id'>): User {
   return createdUser;
 }
 
+export function updateUser(userId: string, updates: Partial<User>): User {
+  const idx = memoryUsers.findIndex(u => u.id === userId);
+  if (idx === -1) {
+    throw new Error('User tidak ditemukan.');
+  }
+
+  const updated = { ...memoryUsers[idx], ...updates };
+  memoryUsers[idx] = updated;
+
+  // If this is the current logged-in user, sync the current user state
+  if (memoryCurrentUser && memoryCurrentUser.id === userId) {
+    saveSessionUser(updated);
+  }
+
+  const client = getSupabaseClient();
+  if (client) {
+    (async () => {
+      try {
+        await client.from('users').update({
+          name: updated.name,
+          email: updated.email,
+          password: updated.password,
+          role: updated.role,
+          department: updated.department,
+          avatar: updated.avatar,
+          company: updated.company || 'BANK'
+        }).eq('id', userId);
+      } catch (e) {
+        console.error('Update user error:', e);
+      }
+    })();
+  }
+
+  return updated;
+}
+
 // --- EXAMS ---
 export function getExams(): ExamPackage[] {
   return memoryExams;

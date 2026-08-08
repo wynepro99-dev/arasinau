@@ -7,8 +7,10 @@ import {
   LayoutDashboard,
   Award,
   BookOpen,
-  User as UserIcon
+  User as UserIcon,
+  Settings
 } from 'lucide-react';
+import { ProfileSettingsModal } from './ProfileSettingsModal';
 
 interface NavbarProps {
   currentUser: User | null;
@@ -30,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToast
 }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const users = getUsers();
 
@@ -161,8 +164,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center space-x-2 bg-slate-50 dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 p-1.5 pr-3 rounded-2xl border border-slate-200/80 dark:border-zinc-800 transition-all text-left shadow-sm active:scale-95"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-zinc-850 text-indigo-700 dark:text-zinc-200 border border-indigo-200/80 dark:border-zinc-800 flex items-center justify-center font-bold text-xs shrink-0">
-                    <UserIcon className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-zinc-850 border border-indigo-200/80 dark:border-zinc-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                    {currentUser.avatar ? (
+                      <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-4 h-4 text-indigo-700 dark:text-zinc-200" />
+                    )}
                   </div>
                   <div className="hidden sm:block leading-tight">
                     <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center space-x-1.5">
@@ -184,8 +191,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-xl py-2 z-50 divide-y divide-slate-100 dark:divide-zinc-800 animate-fade-in">
                     <div className="px-4 py-3">
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-zinc-850 text-indigo-700 dark:text-zinc-200 border border-indigo-200/80 dark:border-zinc-800 flex items-center justify-center font-bold text-xs shrink-0">
-                          <UserIcon className="w-5 h-5" />
+                        <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-zinc-850 border border-indigo-200/80 dark:border-zinc-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                          {currentUser.avatar ? (
+                            <img src={currentUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-5 h-5 text-indigo-700 dark:text-zinc-200" />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{currentUser.name}</p>
@@ -194,7 +205,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </div>
                     </div>
 
-                    <div className="px-2 py-1.5">
+                    <div className="px-2 py-1 space-y-1">
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          setShowSettingsModal(true);
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-xs text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl transition-colors font-semibold"
+                      >
+                        <Settings className="w-4 h-4 text-slate-500" />
+                        <span>Pengaturan Profil</span>
+                      </button>
+
                       <button
                         onClick={() => {
                           setShowProfileMenu(false);
@@ -227,6 +249,15 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         </div>
       </div>
+      {currentUser && (
+        <ProfileSettingsModal
+          currentUser={currentUser}
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          onUpdateCurrentUser={onSelectUser}
+          onToast={onToast}
+        />
+      )}
     </header>
   );
 };
