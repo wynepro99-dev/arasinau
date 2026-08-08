@@ -121,54 +121,41 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
   }
 
   try {
-    // 1. Ensure all preset INITIAL_USERS and current memoryUsers are upserted into Supabase
-    const userMap = new Map<string, User>();
-    for (const u of INITIAL_USERS) {
-      userMap.set(u.email.toLowerCase(), u);
-    }
-    for (const u of memoryUsers) {
-      userMap.set(u.email.toLowerCase(), u);
-    }
-    const allUsersToUpsert = Array.from(userMap.values());
-
-    const formattedUsersToUpsert = allUsersToUpsert.map(u => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      password: u.password || '123456',
-      role: u.role,
-      department: u.department,
-      avatar: u.avatar,
-      company: u.company || 'BANK'
-    }));
-
-    const { error: upsertUserErr } = await client.from('users').upsert(formattedUsersToUpsert, { onConflict: 'email' });
-    if (upsertUserErr) {
-      console.warn('Upsert Initial Users Warning:', upsertUserErr);
-    }
-
-    // 2. Fetch users from Supabase
+    // 1. Fetch users from Supabase first
     const { data: usersData, error: usersErr } = await client.from('users').select('*');
+    
     if (!usersErr && usersData && usersData.length > 0) {
-      const mergedMap = new Map<string, User>();
-      for (const u of allUsersToUpsert) {
-        mergedMap.set(u.email.toLowerCase(), u);
+      // Map Supabase rows directly to memoryUsers
+      memoryUsers = usersData.map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        password: u.password || '123456',
+        role: u.role,
+        department: u.department,
+        avatar: u.avatar,
+        company: u.company || 'BANK'
+      }));
+    } else if (!usersErr && (!usersData || usersData.length === 0)) {
+      // Database users table is empty, seed it with INITIAL_USERS
+      console.log('Seeding Supabase with INITIAL_USERS...');
+      const formattedUsers = INITIAL_USERS.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        password: u.password || '123456',
+        role: u.role,
+        department: u.department,
+        avatar: u.avatar,
+        company: u.company || 'BANK'
+      }));
+      const { error: seedErr } = await client.from('users').upsert(formattedUsers, { onConflict: 'email' });
+      if (seedErr) {
+        console.error('Failed to seed INITIAL_USERS:', seedErr.message);
       }
-      for (const u of usersData) {
-        mergedMap.set(u.email.toLowerCase(), {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          password: u.password || '123456',
-          role: u.role,
-          department: u.department,
-          avatar: u.avatar,
-          company: u.company || 'BANK'
-        });
-      }
-      memoryUsers = Array.from(mergedMap.values());
-    } else {
-      memoryUsers = allUsersToUpsert;
+      memoryUsers = [...INITIAL_USERS];
+    } else if (usersErr) {
+      console.warn('Fetch Users Error from Supabase, falling back to memoryUsers:', usersErr.message);
     }
 
     // 3. Fetch exam packages
@@ -362,16 +349,6 @@ export function getUsers(): User[] {
     const idx = memoryUsers.findIndex(u => u.id === initUser.id || u.email.toLowerCase() === initUser.email.toLowerCase());
     if (idx === -1) {
       memoryUsers.push(initUser);
-    } else {
-      // Keep preset role, department, & password updated
-      memoryUsers[idx] = { 
-        ...memoryUsers[idx], 
-        id: initUser.id,
-        role: initUser.role, 
-        password: initUser.password || '123456', 
-        name: initUser.name, 
-        department: initUser.department 
-      };
     }
   }
 
