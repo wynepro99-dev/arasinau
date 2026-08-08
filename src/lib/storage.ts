@@ -169,137 +169,63 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
 
     // 3. Fetch exam packages
     const { data: examsData, error: examsErr } = await client.from('exam_packages').select('*');
-    if (!examsErr) {
-      const examMap = new Map<string, ExamPackage>();
-      memoryExams.forEach(e => examMap.set(e.id, e));
-      if (examsData && examsData.length > 0) {
-        examsData.forEach((e: any) => {
-          examMap.set(e.id, {
-            id: e.id,
-            title: e.title,
-            description: e.description,
-            category: e.category,
-            durationMinutes: e.duration_minutes,
-            passingScore: e.passing_score,
-            createdAt: e.created_at,
-            status: e.status,
-            authorName: e.author_name,
-            scope: e.scope || 'BANK'
-          });
-        });
-      }
-      memoryExams = Array.from(examMap.values());
-      
-      const formattedExams = memoryExams.map(e => ({
+    if (!examsErr && examsData) {
+      memoryExams = examsData.map((e: any) => ({
         id: e.id,
         title: e.title,
         description: e.description,
         category: e.category,
-        duration_minutes: e.durationMinutes,
-        passing_score: e.passingScore,
-        created_at: e.createdAt,
+        durationMinutes: e.duration_minutes,
+        passingScore: e.passing_score,
+        createdAt: e.created_at,
         status: e.status,
-        author_name: e.authorName,
+        authorName: e.author_name,
         scope: e.scope || 'BANK'
       }));
-      if (formattedExams.length > 0) {
-        await client.from('exam_packages').upsert(formattedExams, { onConflict: 'id' });
-      }
     }
 
     // 4. Fetch questions
     const { data: qData, error: qErr } = await client.from('questions').select('*');
-    if (!qErr) {
-      const qMap = new Map<string, Question>();
-      memoryQuestions.forEach(q => qMap.set(q.id, q));
-      if (qData && qData.length > 0) {
-        qData.forEach((q: any) => {
-          qMap.set(q.id, {
-            id: q.id,
-            examId: q.exam_id,
-            type: q.type,
-            questionText: q.question_text,
-            options: typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []),
-            correctAnswerId: q.correct_answer_id,
-            explanation: q.explanation,
-            points: q.points,
-            caseStudyStory: q.case_study_story || q.caseStudyStory || '',
-            sampleAnswer: q.sample_answer || q.sampleAnswer || '',
-            scope: q.scope || 'BANK'
-          });
-        });
-      }
-      memoryQuestions = Array.from(qMap.values());
-
-      const formattedQuestions = memoryQuestions.map(q => ({
+    if (!qErr && qData) {
+      memoryQuestions = qData.map((q: any) => ({
         id: q.id,
-        exam_id: q.examId,
+        examId: q.exam_id,
         type: q.type,
-        question_text: q.questionText,
-        options: q.options,
-        correct_answer_id: q.correctAnswerId,
+        questionText: q.question_text,
+        options: typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []),
+        correctAnswerId: q.correct_answer_id,
         explanation: q.explanation,
         points: q.points,
-        case_study_story: q.caseStudyStory || '',
-        sample_answer: q.sampleAnswer || '',
+        caseStudyStory: q.case_study_story || '',
+        sampleAnswer: q.sample_answer || '',
         scope: q.scope || 'BANK'
       }));
-      if (formattedQuestions.length > 0) {
-        await client.from('questions').upsert(formattedQuestions, { onConflict: 'id' });
-      }
     }
 
     // 5. Fetch attempts
     const { data: attData, error: attErr } = await client.from('exam_attempts').select('*');
-    if (!attErr) {
-      const attMap = new Map<string, ExamAttempt>();
-      memoryAttempts.forEach(a => attMap.set(a.id, a));
-      if (attData && attData.length > 0) {
-        attData.forEach((a: any) => {
-          attMap.set(a.id, {
-            id: a.id,
-            examId: a.exam_id,
-            userId: a.user_id,
-            userName: a.user_name,
-            userDepartment: a.user_department,
-            examTitle: a.exam_title,
-            score: Number(a.score),
-            totalPointsEarned: a.total_points_earned,
-            totalMaxPoints: a.total_max_points,
-            passed: a.passed,
-            startedAt: a.started_at,
-            completedAt: a.completed_at,
-            durationSecondsUsed: a.duration_seconds_used,
-            answers: typeof a.answers === 'string' ? JSON.parse(a.answers) : a.answers
-          });
-        });
-      }
-      memoryAttempts = Array.from(attMap.values());
-
-      const formattedAttempts = memoryAttempts.map(a => ({
+    if (!attErr && attData) {
+      memoryAttempts = attData.map((a: any) => ({
         id: a.id,
-        exam_id: a.examId,
-        user_id: a.userId,
-        user_name: a.userName,
-        user_department: a.userDepartment,
-        exam_title: a.examTitle,
-        score: a.score,
-        total_points_earned: a.totalPointsEarned,
-        total_max_points: a.totalMaxPoints,
+        examId: a.exam_id,
+        userId: a.user_id,
+        userName: a.user_name,
+        userDepartment: a.user_department,
+        examTitle: a.exam_title,
+        score: Number(a.score),
+        totalPointsEarned: a.total_points_earned,
+        totalMaxPoints: a.total_max_points,
         passed: a.passed,
-        started_at: a.startedAt,
-        completed_at: a.completedAt,
-        duration_seconds_used: a.durationSecondsUsed,
-        answers: a.answers
+        startedAt: a.started_at,
+        completedAt: a.completed_at,
+        durationSecondsUsed: a.duration_seconds_used,
+        answers: typeof a.answers === 'string' ? JSON.parse(a.answers) : a.answers
       }));
-      if (formattedAttempts.length > 0) {
-        await client.from('exam_attempts').upsert(formattedAttempts, { onConflict: 'id' });
-      }
     }
 
     return { 
       success: true, 
-      message: `Berhasil sinkronisasi! ${memoryUsers.length} Akun Personel & Data Ujian telah terdaftar di Supabase.` 
+      message: `Berhasil sinkronisasi! ${memoryUsers.length} Akun Personel & Data Ujian telah sinkron dengan Supabase.` 
     };
   } catch (err: any) {
     console.error('Supabase Sync Error:', err);
@@ -591,23 +517,21 @@ export function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: st
   return saved;
 }
 
-export function deleteExam(examId: string): void {
+export async function deleteExam(examId: string): Promise<void> {
   memoryExams = memoryExams.filter(e => e.id !== examId);
   memoryQuestions = memoryQuestions.filter(q => q.examId !== examId);
   memoryAttempts = memoryAttempts.filter(a => a.examId !== examId);
 
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        // Delete child rows first to prevent Foreign Key constraint violations
-        await client.from('exam_attempts').delete().eq('exam_id', examId);
-        await client.from('questions').delete().eq('exam_id', examId);
-        await client.from('exam_packages').delete().eq('id', examId);
-      } catch (e) {
-        console.error('Error deleting exam and children from Supabase:', e);
-      }
-    })();
+    try {
+      // Delete child rows first to prevent Foreign Key constraint violations
+      await client.from('exam_attempts').delete().eq('exam_id', examId);
+      await client.from('questions').delete().eq('exam_id', examId);
+      await client.from('exam_packages').delete().eq('id', examId);
+    } catch (e) {
+      console.error('Error deleting exam and children from Supabase:', e);
+    }
   }
 }
 
@@ -663,17 +587,15 @@ export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): 
   return saved;
 }
 
-export function deleteQuestion(questionId: string): void {
+export async function deleteQuestion(questionId: string): Promise<void> {
   memoryQuestions = memoryQuestions.filter(q => q.id !== questionId);
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('questions').delete().eq('id', questionId);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    try {
+      await client.from('questions').delete().eq('id', questionId);
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
 

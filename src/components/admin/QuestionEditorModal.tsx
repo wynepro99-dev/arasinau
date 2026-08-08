@@ -344,9 +344,9 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     onRefresh();
   };
 
-  const handleDeleteQ = (qId: string) => {
+  const handleDeleteQ = async (qId: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus soal ini?')) {
-      deleteQuestion(qId);
+      await deleteQuestion(qId);
       onToast('Soal telah dihapus.', 'info');
       onRefresh();
     }

@@ -139,9 +139,9 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     }
   };
 
-  const handleDelete = (examId: string, examTitle: string) => {
+  const handleDelete = async (examId: string, examTitle: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus paket ujian "${examTitle}" beserta seluruh soalnya?`)) {
-      deleteExam(examId);
+      await deleteExam(examId);
       onToast(`Paket ujian "${examTitle}" telah dihapus.`, 'info');
       onRefresh();
     }
