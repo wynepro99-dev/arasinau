@@ -206,6 +206,14 @@ export default function App() {
   };
 
   const handleStartExam = (exam: ExamPackage) => {
+    if (currentUser) {
+      const alreadyTaken = attempts.some(a => a.userId === currentUser.id && a.examId === exam.id);
+      if (alreadyTaken) {
+        showToast('Anda sudah mengerjakan ujian ini sebelumnya dan tidak diperbolehkan mengambil ulang.', 'error');
+        return;
+      }
+    }
+
     const qList = getQuestionsByExamId(exam.id);
     if (qList.length === 0) {
       showToast('Soal untuk ujian ini belum ditambahkan oleh Admin.', 'error');

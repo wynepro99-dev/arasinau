@@ -188,12 +188,14 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                   <div className="mt-5 pt-3 border-t border-slate-100 dark:border-zinc-800">
                     <button
                       onClick={() => onStartExam(exam)}
-                      disabled={examQCount === 0 || isClosed}
+                      disabled={examQCount === 0 || isClosed || !!prevAttempt}
                       className={`w-full py-2.5 px-4 font-bold text-xs rounded-xl transition-all flex items-center justify-center space-x-2 ${
                         isClosed
                           ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 cursor-not-allowed'
-                           : examQCount === 0
+                          : examQCount === 0
                           ? 'bg-slate-200 dark:bg-zinc-950 text-slate-400 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 cursor-not-allowed'
+                          : prevAttempt
+                          ? 'bg-emerald-55 border border-emerald-200/50 text-emerald-600 dark:text-emerald-400 cursor-not-allowed opacity-90'
                           : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/10 dark:shadow-none active:scale-98'
                       }`}
                     >
@@ -206,8 +208,8 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                         <span>Soal Belum Tersedia</span>
                       ) : prevAttempt ? (
                         <>
-                          <RotateCcw className="w-4 h-4" />
-                          <span>Ulangi Ujian Ini</span>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span>Sudah Dikerjakan ({prevAttempt.score} Poin)</span>
                         </>
                       ) : (
                         <>
