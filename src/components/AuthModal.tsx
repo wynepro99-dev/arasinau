@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { getUsers, registerUser } from '../lib/storage';
+import { getUsers, registerUser, getUserUsername } from '../lib/storage';
 import { LOGO_URL } from './Navbar';
 import { X, Lock, Mail, User as UserIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
 
@@ -51,14 +51,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
     const currentUsers = getUsers();
     const found = currentUsers.find(u => {
-      const baseName = u.name.split(' ')[0].toLowerCase();
-      const scopeVal = (u.company || 'BANK').toLowerCase();
-      const usernameOption1 = `${baseName}.${scopeVal}`;
-      const usernameOption2 = `${baseName}${scopeVal}`;
-      
+      const generatedUsername = getUserUsername(u);
       return u.email.toLowerCase() === query || 
-             usernameOption1 === query ||
-             usernameOption2 === query ||
+             generatedUsername === query ||
              u.name.toLowerCase() === query;
     });
     if (found) {
@@ -163,15 +158,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <UserIcon className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Format: nama.scope (contoh: putri.sec atau taka.bank)"
+                  placeholder="Format: nama.ara atau nama.sec (contoh: putri.sec atau taka.ara)"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 transition-all font-medium"
                   required
                 />
               </div>
-              <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1">
-                Gunakan format <strong className="text-indigo-600 dark:text-indigo-400 font-bold">[nama].[scope]</strong> untuk masuk.
+              <p className="text-[10px] text-slate-400 dark:text-zinc-550 mt-1">
+                Gunakan format <strong className="text-indigo-600 dark:text-indigo-400 font-bold">[nama].ara</strong> (BANK) atau <strong className="text-purple-600 dark:text-purple-400 font-bold">[nama].sec</strong> (SEC) untuk masuk.
               </p>
             </div>
 

@@ -15,6 +15,16 @@ function generateUniqueId(prefix: string): string {
   return `${prefix}-${Date.now()}-${rand}-${globalIdSeq++}`;
 }
 
+export function getUserUsername(user: User): string {
+  const words = user.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/);
+  let firstName = words[0]?.toLowerCase() || '';
+  if (firstName.length <= 1 && words.length > 1) {
+    firstName = words[1].toLowerCase();
+  }
+  const suffix = (user.company === 'SEC') ? 'sec' : 'ara';
+  return `${firstName}.${suffix}`;
+}
+
 // Optional Session Sync helper
 function saveSessionUser(user: User | null) {
   memoryCurrentUser = user;
