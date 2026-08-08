@@ -53,8 +53,15 @@ if (typeof window !== 'undefined') {
   };
 
   window.onerror = (message, source, lineno, colno, error) => {
+    // Ignore generic cross-origin script errors (often caused by browser extensions or translation scripts)
+    const msgStr = String(message);
+    if (msgStr === 'Script error.' || msgStr.includes('Script error') || !source) {
+      console.warn('Ignored cross-origin script error:', message);
+      return false;
+    }
+
     showErrorOverlay(
-      `Unhandled Exception: ${String(message)}`,
+      `Unhandled Exception: ${msgStr}`,
       `Source: ${source}:${lineno}:${colno}`,
       error?.stack
     );
