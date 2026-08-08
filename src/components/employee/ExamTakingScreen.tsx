@@ -115,9 +115,6 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 
   const [startTime] = useState(new Date().toISOString());
   const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [cheatCount, setCheatCount] = useState(0);
-  const [showCheatWarning, setShowCheatWarning] = useState(false);
-  const [isDuplicateTab, setIsDuplicateTab] = useState(false);
 
   // Save session state to localStorage on state change
   useEffect(() => {
@@ -142,62 +139,6 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   useEffect(() => {
     submitRef.current = handleFinalSubmit;
   }, [handleFinalSubmit]);
-
-  // Monitor tab switching
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        setCheatCount(prev => {
-          const nextCount = prev + 1;
-          if (nextCount >= 3) {
-            onToast('Ujian Anda dikirim otomatis karena melanggar aturan multi-tab / tab switching sebanyak 3 kali.', 'error');
-            setTimeout(() => {
-              submitRef.current();
-            }, 100);
-          } else {
-            setShowCheatWarning(true);
-          }
-          return nextCount;
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [onToast]);
-
-  // Monitor duplicate tabs
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.BroadcastChannel) return;
-    const channelName = `exam_tab_monitor_${exam.id}_${currentUser.id}`;
-    let channel: BroadcastChannel | null = null;
-    try {
-      channel = new BroadcastChannel(channelName);
-      
-      // Broadcast active status
-      channel.postMessage({ type: 'EXAM_OPEN' });
-      
-      channel.onmessage = (event) => {
-        if (event.data.type === 'EXAM_OPEN') {
-          channel?.postMessage({ type: 'EXAM_DUPLICATE' });
-        } else if (event.data.type === 'EXAM_DUPLICATE') {
-          setIsDuplicateTab(true);
-        }
-      };
-    } catch (e) {
-      console.warn('BroadcastChannel block check failed:', e);
-    }
-    
-    return () => {
-      if (channel) {
-        try {
-          channel.close();
-        } catch (e) {}
-      }
-    };
-  }, [exam.id, currentUser.id]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -387,34 +328,6 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   const minutes = Math.floor(timeLeftSeconds / 60);
   const seconds = timeLeftSeconds % 60;
   const isTimeWarning = timeLeftSeconds < 180; // Less than 3 minutes
-
-  if (isDuplicateTab) {
-    return (
-      <div className="fixed inset-0 z-50 bg-slate-900/95 dark:bg-black/95 backdrop-blur-md flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-8 rounded-3xl shadow-2xl text-center space-y-5">
-          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
-            <ShieldAlert className="w-8 h-8" />
-          </div>
-          <h2 className="text-lg font-black text-slate-900 dark:text-white">Ujian Terbuka di Tab Lain!</h2>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-medium">
-            Demi menjaga integritas ujian, Anda tidak diperbolehkan membuka lembar soal di beberapa tab atau browser secara bersamaan.
-          </p>
-          <div className="bg-slate-50 dark:bg-zinc-950 p-4 rounded-2xl text-left border border-slate-100 dark:border-zinc-850">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-550 block mb-1 uppercase">Solusi:</span>
-            <p className="text-xs text-slate-700 dark:text-zinc-350 font-semibold leading-relaxed">
-              Silakan gunakan tab pertama Anda yang sedang aktif untuk melanjutkan ujian, atau tutup tab ini.
-            </p>
-          </div>
-          <button
-            onClick={() => window.close()}
-            className="w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-2xl transition-all"
-          >
-            Tutup Tab Ini
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (!currentQ) {
     return (
@@ -720,34 +633,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
             </div>
 
           </div>
-        </div>
-      )}
-
-      {showCheatWarning && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-xl text-center space-y-4">
-            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-950/20 text-amber-500 rounded-full flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6 animate-pulse" />
-            </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Peringatan Kecurangan!</h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
-              Anda terdeteksi keluar dari tab atau browser ujian. Hal ini sangat dilarang demi keamanan ujian.
-            </p>
-            <div className="py-2.5 px-4 bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/50 dark:border-amber-900/30 rounded-xl text-xs">
-              <span className="font-medium text-slate-600 dark:text-zinc-400">Total Pelanggaran: </span>
-              <span className="font-extrabold text-amber-600 dark:text-amber-400">{cheatCount} / 3</span>
-            </div>
-            <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
-              Meninggalkan halaman ujian sebanyak <strong className="text-rose-600 dark:text-rose-400 font-bold">3 kali</strong> akan menyebabkan ujian Anda dikirim otomatis oleh sistem!
-            </p>
-            <button
-              onClick={() => setShowCheatWarning(false)}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-98"
-            >
-              Saya Mengerti & Lanjutkan
-            </button>
           </div>
-        </div>
       )}
 
     </div>
