@@ -238,15 +238,6 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
 
         {/* Footer actions */}
         <div className="p-4 bg-slate-900 border-t border-slate-800 flex items-center justify-end space-x-2">
-          {onRetakeExam && (
-            <button
-              onClick={onRetakeExam}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center space-x-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Coba Ujian Kembali</span>
-            </button>
-          )}
 
           <button
             onClick={onClose}
