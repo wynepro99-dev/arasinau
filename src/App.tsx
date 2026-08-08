@@ -33,8 +33,12 @@ export default function App() {
       const user = getCurrentUser();
       if (user) {
         if (user.role === 'karyawan') return 'employee_dashboard';
-        const savedTab = localStorage.getItem('ara_active_tab');
-        return savedTab || 'dashboard';
+        try {
+          const savedTab = localStorage.getItem('ara_active_tab');
+          return savedTab || 'dashboard';
+        } catch {
+          return 'dashboard';
+        }
       }
     }
     return 'dashboard';
@@ -90,63 +94,77 @@ export default function App() {
   // Persist and restore activeTab, activeQuestionExam, and activeTakingExam in localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTab = localStorage.getItem('ara_active_tab');
-      if (savedTab) {
-        // Only restore if role is compatible
-        const user = getCurrentUser();
-        if (user) {
-          const isKaryawan = user.role === 'karyawan';
-          const isAdminTab = savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'scores';
-          if (isKaryawan && isAdminTab) {
-            setActiveTab('employee_dashboard');
+      try {
+        const savedTab = localStorage.getItem('ara_active_tab');
+        if (savedTab) {
+          // Only restore if role is compatible
+          const user = getCurrentUser();
+          if (user) {
+            const isKaryawan = user.role === 'karyawan';
+            const isAdminTab = savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'scores';
+            if (isKaryawan && isAdminTab) {
+              setActiveTab('employee_dashboard');
+            } else {
+              setActiveTab(savedTab);
+            }
           } else {
             setActiveTab(savedTab);
           }
-        } else {
-          setActiveTab(savedTab);
         }
+      } catch (e) {
+        console.warn('Failed to access localStorage:', e);
       }
     }
   }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && activeTab) {
-      localStorage.setItem('ara_active_tab', activeTab);
+      try {
+        localStorage.setItem('ara_active_tab', activeTab);
+      } catch (e) {}
     }
   }, [activeTab]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (activeQuestionExam) {
-        localStorage.setItem('ara_active_question_exam_id', activeQuestionExam.id);
-      } else {
-        localStorage.removeItem('ara_active_question_exam_id');
-      }
+      try {
+        if (activeQuestionExam) {
+          localStorage.setItem('ara_active_question_exam_id', activeQuestionExam.id);
+        } else {
+          localStorage.removeItem('ara_active_question_exam_id');
+        }
+      } catch (e) {}
     }
   }, [activeQuestionExam]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (activeTakingExam) {
-        localStorage.setItem('ara_active_taking_exam_id', activeTakingExam.id);
-      } else {
-        localStorage.removeItem('ara_active_taking_exam_id');
-      }
+      try {
+        if (activeTakingExam) {
+          localStorage.setItem('ara_active_taking_exam_id', activeTakingExam.id);
+        } else {
+          localStorage.removeItem('ara_active_taking_exam_id');
+        }
+      } catch (e) {}
     }
   }, [activeTakingExam]);
 
   useEffect(() => {
     if (exams.length > 0) {
-      const savedQExamId = localStorage.getItem('ara_active_question_exam_id');
-      if (savedQExamId && !activeQuestionExam) {
-        const found = exams.find(e => e.id === savedQExamId);
-        if (found) setActiveQuestionExam(found);
-      }
+      try {
+        const savedQExamId = localStorage.getItem('ara_active_question_exam_id');
+        if (savedQExamId && !activeQuestionExam) {
+          const found = exams.find(e => e.id === savedQExamId);
+          if (found) setActiveQuestionExam(found);
+        }
 
-      const savedTakingExamId = localStorage.getItem('ara_active_taking_exam_id');
-      if (savedTakingExamId && !activeTakingExam) {
-        const found = exams.find(e => e.id === savedTakingExamId);
-        if (found) setActiveTakingExam(found);
+        const savedTakingExamId = localStorage.getItem('ara_active_taking_exam_id');
+        if (savedTakingExamId && !activeTakingExam) {
+          const found = exams.find(e => e.id === savedTakingExamId);
+          if (found) setActiveTakingExam(found);
+        }
+      } catch (e) {
+        console.warn('Failed to read active IDs from localStorage:', e);
       }
     }
   }, [exams]);
