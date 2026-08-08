@@ -242,7 +242,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   const answeredCount = Object.values(userAnswers).filter((a: { answerId: string; essayText?: string }) => a.answerId || a.essayText?.trim()).length;
   const unansweredCount = questions.length - answeredCount;
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     setShowSubmitModal(false);
 
     // Clear local storage exam session keys
@@ -302,7 +302,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
     const completedAt = new Date().toISOString();
     const durationSecondsUsed = (exam.durationMinutes * 60) - timeLeftSeconds;
 
-    const savedAttempt = saveAttempt({
+    const savedAttempt = await saveAttempt({
       examId: exam.id,
       userId: currentUser.id,
       userName: currentUser.name,

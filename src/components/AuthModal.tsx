@@ -111,7 +111,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regEmail.trim()) {
       onToast('Semua kolom wajib diisi.', 'error');
@@ -119,7 +119,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     try {
-      const created = registerUser({
+      const created = await registerUser({
         name: regName.trim(),
         email: regEmail.trim(),
         role: regRole,

@@ -79,7 +79,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     }));
   };
 
-  const handleSaveGrades = () => {
+  const handleSaveGrades = async () => {
     if (!activeAttemptDetail) return;
 
     const allQuestions = getQuestions();
@@ -127,7 +127,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
       passed: isPassed
     };
 
-    updateAttempt(updated);
+    await updateAttempt(updated);
     onToast('Nilai evaluasi manual berhasil disimpan!', 'success');
     setActiveAttemptDetail(updated);
     if (onRefresh) onRefresh();

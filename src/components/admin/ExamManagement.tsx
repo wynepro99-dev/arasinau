@@ -93,14 +93,14 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleToggleSession = (exam: ExamPackage) => {
+  const handleToggleSession = async (exam: ExamPackage) => {
     const newStatus: 'active' | 'closed' = exam.status === 'active' ? 'closed' : 'active';
     const msg = newStatus === 'closed' 
       ? `Sesi ujian "${exam.title}" telah DITUTUP oleh Admin.`
       : `Sesi ujian "${exam.title}" telah DIBUKA kembali untuk peserta.`;
 
     try {
-      saveExam({
+      await saveExam({
         ...exam,
         status: newStatus
       });
@@ -111,7 +111,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     }
   };
 
-  const handleSubmitExam = (e: React.FormEvent) => {
+  const handleSubmitExam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) {
       onToast('Judul dan deskripsi ujian wajib diisi.', 'error');
@@ -119,7 +119,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     }
 
     try {
-      saveExam({
+      await saveExam({
         id: editingExam?.id,
         title: title.trim(),
         description: description.trim(),

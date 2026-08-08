@@ -231,29 +231,26 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
   }
 
   try {
-    // 1. Seed Users (All INITIAL_USERS + memoryUsers)
-    const userMap = new Map<string, User>();
-    for (const u of INITIAL_USERS) {
-      userMap.set(u.email.toLowerCase(), u);
-    }
-    for (const u of memoryUsers) {
-      userMap.set(u.email.toLowerCase(), u);
-    }
-    const allUsers = Array.from(userMap.values());
+    // 1. Insert ONLY users that don't already exist (preserve existing passwords/data)
+    const { data: existingUsers } = await client.from('users').select('email');
+    const existingEmails = new Set((existingUsers || []).map((u: any) => u.email.toLowerCase()));
 
-    const formattedUsers = allUsers.map(u => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      password: u.password || '123456',
-      role: u.role,
-      department: u.department,
-      avatar: u.avatar,
-      company: u.company || 'BANK'
-    }));
-    await client.from('users').upsert(formattedUsers, { onConflict: 'email' });
+    const newUsers = INITIAL_USERS.filter(u => !existingEmails.has(u.email.toLowerCase()));
+    if (newUsers.length > 0) {
+      const formattedNewUsers = newUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        password: u.password || '123456',
+        role: u.role,
+        department: u.department,
+        avatar: u.avatar,
+        company: u.company || 'BANK'
+      }));
+      await client.from('users').insert(formattedNewUsers);
+    }
 
-    // 2. Seed Exams
+    // 2. Seed Exams (upsert is fine for exams — they don't have user-editable passwords)
     const formattedExams = memoryExams.map(e => ({
       id: e.id,
       title: e.title,
@@ -309,9 +306,12 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
       await client.from('exam_attempts').upsert(formattedAttempts, { onConflict: 'id' });
     }
 
+    // Re-sync from database to get accurate state
+    await syncFromSupabase();
+
     return { 
       success: true, 
-      message: `Semua data (${allUsers.length} Akun Personel, Paket Ujian & Soal) berhasil disuntikkan ke Supabase Database!` 
+      message: `Data berhasil disinkronkan ke Supabase Database! (${newUsers.length} akun baru ditambahkan)` 
     };
   } catch (err: any) {
     console.error('Seed Supabase Error:', err);
@@ -332,14 +332,19 @@ export function cleanupBrokenProfiles(): number {
   return initialCount - memoryUsers.length;
 }
 
-export function deleteUser(userId: string): void {
+export async function deleteUser(userId: string): Promise<void> {
+  const prevUsers = [...memoryUsers];
   memoryUsers = memoryUsers.filter(u => u.id !== userId);
   if (memoryCurrentUser?.id === userId) {
     setCurrentUser(null);
   }
   const client = getSupabaseClient();
   if (client) {
-    Promise.resolve(client.from('users').delete().eq('id', userId)).catch(() => {});
+    const { error } = await client.from('users').delete().eq('id', userId);
+    if (error) {
+      memoryUsers = prevUsers; // rollback on failure
+      throw new Error(`Gagal menghapus user di database: ${error.message}`);
+    }
   }
 }
 
@@ -366,7 +371,7 @@ export function setCurrentUser(user: User | null): void {
   saveSessionUser(user);
 }
 
-export function registerUser(newUser: Omit<User, 'id'>): User {
+export async function registerUser(newUser: Omit<User, 'id'>): Promise<User> {
   const users = getUsers();
   const existing = users.find(u => u.email.toLowerCase() === newUser.email.toLowerCase());
   if (existing) {
@@ -382,25 +387,23 @@ export function registerUser(newUser: Omit<User, 'id'>): User {
   memoryUsers.push(createdUser);
   setCurrentUser(createdUser);
 
-  // Sync to Supabase in background if available
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('users').insert({
-          id: createdUser.id,
-          name: createdUser.name,
-          email: createdUser.email,
-          password: createdUser.password,
-          role: createdUser.role,
-          department: createdUser.department,
-          avatar: createdUser.avatar,
-          company: createdUser.company || 'BANK'
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    const { error } = await client.from('users').insert({
+      id: createdUser.id,
+      name: createdUser.name,
+      email: createdUser.email,
+      password: createdUser.password,
+      role: createdUser.role,
+      department: createdUser.department,
+      avatar: createdUser.avatar,
+      company: createdUser.company || 'BANK'
+    });
+    if (error) {
+      // Rollback memory
+      memoryUsers = memoryUsers.filter(u => u.id !== createdUser.id);
+      throw new Error(`Gagal mendaftarkan user ke database: ${error.message}`);
+    }
   }
 
   return createdUser;
@@ -445,7 +448,7 @@ export function getExams(): ExamPackage[] {
   return memoryExams;
 }
 
-export function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: string }): ExamPackage {
+export async function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: string }): Promise<ExamPackage> {
   let saved: ExamPackage;
 
   if (exam.id) {
@@ -470,27 +473,23 @@ export function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: st
     memoryExams.push(saved);
   }
 
-  // Async push to Supabase
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('exam_packages').upsert({
-          id: saved.id,
-          title: saved.title,
-          description: saved.description,
-          category: saved.category,
-          duration_minutes: saved.durationMinutes,
-          passing_score: saved.passingScore,
-          created_at: saved.createdAt,
-          status: saved.status,
-          author_name: saved.authorName,
-          scope: saved.scope || 'BANK'
-        }, { onConflict: 'id' });
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    const { error } = await client.from('exam_packages').upsert({
+      id: saved.id,
+      title: saved.title,
+      description: saved.description,
+      category: saved.category,
+      duration_minutes: saved.durationMinutes,
+      passing_score: saved.passingScore,
+      created_at: saved.createdAt,
+      status: saved.status,
+      author_name: saved.authorName,
+      scope: saved.scope || 'BANK'
+    }, { onConflict: 'id' });
+    if (error) {
+      throw new Error(`Gagal menyimpan paket ujian ke database: ${error.message}`);
+    }
   }
 
   return saved;
@@ -551,7 +550,7 @@ export function getQuestionsByExamId(examId: string): Question[] {
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): Question {
+export async function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): Promise<Question> {
   let saved: Question;
 
   if (question.id) {
@@ -570,25 +569,22 @@ export function saveQuestion(question: Omit<Question, 'id'> & { id?: string }): 
 
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('questions').upsert({
-          id: saved.id,
-          exam_id: saved.examId,
-          type: saved.type,
-          question_text: saved.questionText,
-          options: saved.options,
-          correct_answer_id: saved.correctAnswerId,
-          explanation: saved.explanation,
-          points: saved.points,
-          case_study_story: saved.caseStudyStory || '',
-          sample_answer: saved.sampleAnswer || '',
-          scope: saved.scope || 'BANK'
-        }, { onConflict: 'id' });
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    const { error } = await client.from('questions').upsert({
+      id: saved.id,
+      exam_id: saved.examId,
+      type: saved.type,
+      question_text: saved.questionText,
+      options: saved.options,
+      correct_answer_id: saved.correctAnswerId,
+      explanation: saved.explanation,
+      points: saved.points,
+      case_study_story: saved.caseStudyStory || '',
+      sample_answer: saved.sampleAnswer || '',
+      scope: saved.scope || 'BANK'
+    }, { onConflict: 'id' });
+    if (error) {
+      throw new Error(`Gagal menyimpan soal ke database: ${error.message}`);
+    }
   }
 
   return saved;
@@ -630,7 +626,7 @@ export function getAttempts(): ExamAttempt[] {
   return memoryAttempts;
 }
 
-export function saveAttempt(attempt: Omit<ExamAttempt, 'id'>): ExamAttempt {
+export async function saveAttempt(attempt: Omit<ExamAttempt, 'id'>): Promise<ExamAttempt> {
   const saved: ExamAttempt = {
     ...attempt,
     id: generateUniqueId('att')
@@ -639,34 +635,31 @@ export function saveAttempt(attempt: Omit<ExamAttempt, 'id'>): ExamAttempt {
 
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('exam_attempts').insert({
-          id: saved.id,
-          exam_id: saved.examId,
-          user_id: saved.userId,
-          user_name: saved.userName,
-          user_department: saved.userDepartment,
-          exam_title: saved.examTitle,
-          score: saved.score,
-          total_points_earned: saved.totalPointsEarned,
-          total_max_points: saved.totalMaxPoints,
-          passed: saved.passed,
-          started_at: saved.startedAt,
-          completed_at: saved.completedAt,
-          duration_seconds_used: saved.durationSecondsUsed,
-          answers: saved.answers
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    const { error } = await client.from('exam_attempts').insert({
+      id: saved.id,
+      exam_id: saved.examId,
+      user_id: saved.userId,
+      user_name: saved.userName,
+      user_department: saved.userDepartment,
+      exam_title: saved.examTitle,
+      score: saved.score,
+      total_points_earned: saved.totalPointsEarned,
+      total_max_points: saved.totalMaxPoints,
+      passed: saved.passed,
+      started_at: saved.startedAt,
+      completed_at: saved.completedAt,
+      duration_seconds_used: saved.durationSecondsUsed,
+      answers: saved.answers
+    });
+    if (error) {
+      console.error('Gagal menyimpan hasil ujian ke database:', error.message);
+    }
   }
 
   return saved;
 }
 
-export function updateAttempt(updatedAttempt: ExamAttempt): ExamAttempt {
+export async function updateAttempt(updatedAttempt: ExamAttempt): Promise<ExamAttempt> {
   const idx = memoryAttempts.findIndex(a => a.id === updatedAttempt.id);
   if (idx !== -1) {
     memoryAttempts[idx] = updatedAttempt;
@@ -676,28 +669,25 @@ export function updateAttempt(updatedAttempt: ExamAttempt): ExamAttempt {
 
   const client = getSupabaseClient();
   if (client) {
-    (async () => {
-      try {
-        await client.from('exam_attempts').upsert({
-          id: updatedAttempt.id,
-          exam_id: updatedAttempt.examId,
-          user_id: updatedAttempt.userId,
-          user_name: updatedAttempt.userName,
-          user_department: updatedAttempt.userDepartment,
-          exam_title: updatedAttempt.examTitle,
-          score: updatedAttempt.score,
-          total_points_earned: updatedAttempt.totalPointsEarned,
-          total_max_points: updatedAttempt.totalMaxPoints,
-          passed: updatedAttempt.passed,
-          started_at: updatedAttempt.startedAt,
-          completed_at: updatedAttempt.completedAt,
-          duration_seconds_used: updatedAttempt.durationSecondsUsed,
-          answers: updatedAttempt.answers
-        }, { onConflict: 'id' });
-      } catch (e) {
-        console.error(e);
-      }
-    })();
+    const { error } = await client.from('exam_attempts').upsert({
+      id: updatedAttempt.id,
+      exam_id: updatedAttempt.examId,
+      user_id: updatedAttempt.userId,
+      user_name: updatedAttempt.userName,
+      user_department: updatedAttempt.userDepartment,
+      exam_title: updatedAttempt.examTitle,
+      score: updatedAttempt.score,
+      total_points_earned: updatedAttempt.totalPointsEarned,
+      total_max_points: updatedAttempt.totalMaxPoints,
+      passed: updatedAttempt.passed,
+      started_at: updatedAttempt.startedAt,
+      completed_at: updatedAttempt.completedAt,
+      duration_seconds_used: updatedAttempt.durationSecondsUsed,
+      answers: updatedAttempt.answers
+    }, { onConflict: 'id' });
+    if (error) {
+      console.error('Gagal memperbarui hasil ujian di database:', error.message);
+    }
   }
 
   return updatedAttempt;
@@ -810,11 +800,8 @@ export function clearAllData(): void {
 }
 
 export function resetDemoData(): void {
-  memoryUsers = [...INITIAL_USERS];
-  memoryExams = [];
-  memoryQuestions = [];
-  memoryAttempts = [];
-  memoryCurrentUser = null;
-  clearAllData();
+  // Intentionally disabled to prevent accidental data destruction.
+  // Use the Supabase dashboard to manage data directly.
+  console.warn('resetDemoData is disabled to protect production data.');
 }
 

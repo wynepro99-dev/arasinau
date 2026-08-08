@@ -146,11 +146,11 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     }
   };
 
-  const handleSaveImport = () => {
+  const handleSaveImport = async () => {
     if (previewQuestions.length === 0) return;
     
-    previewQuestions.forEach((q) => {
-      saveQuestion({
+    for (const q of previewQuestions) {
+      await saveQuestion({
         examId: exam.id,
         type: q.type,
         questionText: q.questionText,
@@ -162,7 +162,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
         points: q.points,
         scope: q.scope
       });
-    });
+    }
 
     onToast(`Berhasil menyimpan ${previewQuestions.length} soal baru ke bank soal!`, 'success');
     setImportText('');
@@ -289,7 +289,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     setActiveTab('create');
   };
 
-  const handleSaveQuestion = (e: React.FormEvent) => {
+  const handleSaveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionText.trim()) {
       onToast('Teks pertanyaan / instruksi essay wajib diisi.', 'error');
@@ -324,7 +324,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
       finalCorrectAnswerId = 'essay';
     }
 
-    saveQuestion({
+    await saveQuestion({
       id: editingQuestionId || undefined,
       examId: exam.id,
       type: questionType,
