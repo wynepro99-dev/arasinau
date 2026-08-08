@@ -7,7 +7,9 @@ import {
   Trash2, 
   Edit3, 
   Check, 
-  FileText
+  FileText,
+  Database,
+  Upload
 } from 'lucide-react';
 
 interface QuestionEditorModalProps {
@@ -25,7 +27,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
   onRefresh,
   onToast
 }) => {
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'import'>('list');
   const questions = getQuestionsByExamId(exam.id);
 
   // Question Manual Form State
@@ -44,6 +46,209 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
   const [explanation, setExplanation] = useState('');
   const [points, setPoints] = useState(25);
   const [qScope, setQScope] = useState<'BANK' | 'SEC' | 'ALL'>('BANK');
+
+  // Import State
+  const [importText, setImportText] = useState('');
+  const [previewQuestions, setPreviewQuestions] = useState<any[]>([]);
+
+  const handleParseText = () => {
+    if (!importText.trim()) {
+      onToast('Silakan tempel teks soal terlebih dahulu.', 'error');
+      return;
+    }
+    const lines = importText.split(/\r?\n/);
+    const result: any[] = [];
+    let currentQuestion: any = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      // Question start detection (e.g. "1. ..." or "1) ...")
+      const qMatch = line.match(/^(\d+)[\.\)]\s+(.*)$/);
+      if (qMatch) {
+        if (currentQuestion) {
+          result.push(currentQuestion);
+        }
+        currentQuestion = {
+          type: 'multiple_choice',
+          questionText: qMatch[2].trim(),
+          options: [],
+          correctAnswerId: '',
+          explanation: '',
+          points: 25,
+          scope: exam.scope || 'BANK'
+        };
+        continue;
+      }
+
+      // Option detection (e.g. "A. ..." or "A) ...")
+      const optMatch = line.match(/^([A-D])[\.\)]\s+(.*)$/i);
+      if (optMatch && currentQuestion) {
+        const letter = optMatch[1].toUpperCase();
+        currentQuestion.options.push({
+          id: `opt-${letter.toLowerCase()}`,
+          text: optMatch[2].trim()
+        });
+        continue;
+      }
+
+      // Answer key detection (e.g. "Kunci Jawaban: B" or "Kunci: B" or "Kunci Jawaban: Pembelajaran...")
+      const keyMatch = line.match(/^(?:Kunci Jawaban|Kunci|Jawaban)\s*:\s*(.*)$/i);
+      if (keyMatch && currentQuestion) {
+        const keyVal = keyMatch[1].trim();
+        if (/^[A-D]$/i.test(keyVal)) {
+          currentQuestion.type = 'multiple_choice';
+          currentQuestion.correctAnswerId = `opt-${keyVal.toLowerCase()}`;
+        } else if (/^(?:Benar|Salah|True|False)$/i.test(keyVal)) {
+          currentQuestion.type = 'true_false';
+          currentQuestion.options = [
+            { id: 'true', text: 'Benar' },
+            { id: 'false', text: 'Salah' }
+          ];
+          currentQuestion.correctAnswerId = keyVal.toLowerCase().startsWith('t') || keyVal.toLowerCase().startsWith('b') ? 'true' : 'false';
+        } else {
+          currentQuestion.type = 'essay';
+          currentQuestion.sampleAnswer = keyVal;
+          currentQuestion.correctAnswerId = 'essay';
+          currentQuestion.options = [];
+        }
+        continue;
+      }
+
+      // Explanation detection (e.g. "Pembahasan: ...")
+      const expMatch = line.match(/^(?:Pembahasan|Penjelasan|Explanation)\s*:\s*(.*)$/i);
+      if (expMatch && currentQuestion) {
+        currentQuestion.explanation = expMatch[1].trim();
+        continue;
+      }
+
+      // Append multiline text
+      if (currentQuestion) {
+        if (currentQuestion.options.length === 0) {
+          currentQuestion.questionText += '\n' + line;
+        } else if (currentQuestion.options.length > 0 && !currentQuestion.correctAnswerId) {
+          const lastOpt = currentQuestion.options[currentQuestion.options.length - 1];
+          lastOpt.text += '\n' + line;
+        }
+      }
+    }
+
+    if (currentQuestion) {
+      result.push(currentQuestion);
+    }
+
+    if (result.length === 0) {
+      onToast('Format teks tidak dikenali. Silakan ikuti petunjuk format contoh di bawah.', 'error');
+    } else {
+      setPreviewQuestions(result);
+      onToast(`Berhasil mengenali ${result.length} soal! Silakan periksa tinjauan di bawah.`, 'success');
+    }
+  };
+
+  const handleSaveImport = () => {
+    if (previewQuestions.length === 0) return;
+    
+    previewQuestions.forEach((q) => {
+      saveQuestion({
+        examId: exam.id,
+        type: q.type,
+        questionText: q.questionText,
+        caseStudyStory: '',
+        sampleAnswer: q.sampleAnswer || '',
+        options: q.options,
+        correctAnswerId: q.correctAnswerId,
+        explanation: q.explanation || '',
+        points: q.points,
+        scope: q.scope
+      });
+    });
+
+    onToast(`Berhasil menyimpan ${previewQuestions.length} soal baru ke bank soal!`, 'success');
+    setImportText('');
+    setPreviewQuestions([]);
+    setActiveTab('list');
+    onRefresh();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setImportText(text);
+      // Auto parse
+      const lines = text.split(/\r?\n/);
+      const result: any[] = [];
+      let currentQuestion: any = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const qMatch = line.match(/^(\d+)[\.\)]\s+(.*)$/);
+        if (qMatch) {
+          if (currentQuestion) result.push(currentQuestion);
+          currentQuestion = {
+            type: 'multiple_choice',
+            questionText: qMatch[2].trim(),
+            options: [],
+            correctAnswerId: '',
+            explanation: '',
+            points: 25,
+            scope: exam.scope || 'BANK'
+          };
+          continue;
+        }
+        const optMatch = line.match(/^([A-D])[\.\)]\s+(.*)$/i);
+        if (optMatch && currentQuestion) {
+          const letter = optMatch[1].toUpperCase();
+          currentQuestion.options.push({
+            id: `opt-${letter.toLowerCase()}`,
+            text: optMatch[2].trim()
+          });
+          continue;
+        }
+        const keyMatch = line.match(/^(?:Kunci Jawaban|Kunci|Jawaban)\s*:\s*(.*)$/i);
+        if (keyMatch && currentQuestion) {
+          const keyVal = keyMatch[1].trim();
+          if (/^[A-D]$/i.test(keyVal)) {
+            currentQuestion.type = 'multiple_choice';
+            currentQuestion.correctAnswerId = `opt-${keyVal.toLowerCase()}`;
+          } else if (/^(?:Benar|Salah|True|False)$/i.test(keyVal)) {
+            currentQuestion.type = 'true_false';
+            currentQuestion.options = [
+              { id: 'true', text: 'Benar' },
+              { id: 'false', text: 'Salah' }
+            ];
+            currentQuestion.correctAnswerId = keyVal.toLowerCase().startsWith('t') || keyVal.toLowerCase().startsWith('b') ? 'true' : 'false';
+          } else {
+            currentQuestion.type = 'essay';
+            currentQuestion.sampleAnswer = keyVal;
+            currentQuestion.correctAnswerId = 'essay';
+            currentQuestion.options = [];
+          }
+          continue;
+        }
+        const expMatch = line.match(/^(?:Pembahasan|Penjelasan|Explanation)\s*:\s*(.*)$/i);
+        if (expMatch && currentQuestion) {
+          currentQuestion.explanation = expMatch[1].trim();
+          continue;
+        }
+        if (currentQuestion) {
+          if (currentQuestion.options.length === 0) {
+            currentQuestion.questionText += '\n' + line;
+          } else if (currentQuestion.options.length > 0 && !currentQuestion.correctAnswerId) {
+            const lastOpt = currentQuestion.options[currentQuestion.options.length - 1];
+            lastOpt.text += '\n' + line;
+          }
+        }
+      }
+      if (currentQuestion) result.push(currentQuestion);
+      setPreviewQuestions(result);
+      onToast(`Berhasil membaca file dan mendeteksi ${result.length} soal!`, 'success');
+    };
+    reader.readAsText(file);
+  };
 
   if (!isOpen) return null;
 
@@ -198,6 +403,22 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>{editingQuestionId ? 'Edit Soal' : 'Tambah Soal'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setImportText('');
+              setPreviewQuestions([]);
+              setActiveTab('import');
+            }}
+            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center space-x-2 transition-colors ${
+              activeTab === 'import'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Database className="w-4 h-4" />
+            <span>Import Massal (Text / Word)</span>
           </button>
         </div>
 
@@ -506,6 +727,157 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                 </button>
               </div>
             </form>
+          )}
+
+          {/* TAB 3: IMPORT MASSAL PANEL */}
+          {activeTab === 'import' && (
+            <div className="space-y-5">
+              <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl text-xs space-y-2">
+                <h4 className="font-extrabold text-indigo-950 flex items-center gap-1.5 text-[13px]">
+                  <Database className="w-4 h-4" />
+                  <span>Panduan Format Copy-Paste Soal</span>
+                </h4>
+                <p className="text-slate-600 leading-relaxed">
+                  Buka dokumen Microsoft Word atau dokumen teks Anda, salin teks soal Anda, lalu tempelkan ke kolom di bawah. 
+                  Sistem akan mem-parsing secara otomatis dengan format berikut:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  <div className="bg-white p-3 rounded-xl border border-indigo-100/50 font-mono text-[10px] text-slate-700 space-y-1">
+                    <span className="text-indigo-600 font-bold block mb-1">// FORMAT PILIHAN GANDA (MCQ):</span>
+                    <p>1. Apa kepanjangan dari SEOS?</p>
+                    <p>A. Smarteducafe Education Operating System</p>
+                    <p>B. Smarteducafe Operating System</p>
+                    <p>C. Smart Education Online System</p>
+                    <p>D. Smart Operating System</p>
+                    <p className="font-bold text-emerald-600">Kunci Jawaban: A</p>
+                    <p className="text-slate-400">Pembahasan: SEOS adalah operating system pendidikan.</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-indigo-100/50 font-mono text-[10px] text-slate-700 space-y-1">
+                    <span className="text-purple-600 font-bold block mb-1">// FORMAT ESSAY / RUBRIK:</span>
+                    <p>2. Jelaskan filosofi dasar dari Smarteducafe!</p>
+                    <p className="font-bold text-emerald-600">Kunci Jawaban: Filosofi kami berpusat pada pemahaman konsep logis mendalam, bukan sekadar menghafal rumus pola jawaban ujian.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700">Tempel Teks Soal Dokumen Di Sini</label>
+                  <label className="cursor-pointer text-xs font-bold text-indigo-600 hover:text-indigo-500 flex items-center space-x-1">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload File (.txt)</span>
+                    <input
+                      type="file"
+                      accept=".txt,.md"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <textarea
+                  rows={8}
+                  placeholder="Tempel teks dokumen Anda di sini (Pastikan format penomoran 1., 2. dan opsi A., B. lengkap)..."
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImportText('');
+                    setPreviewQuestions([]);
+                  }}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-all"
+                >
+                  Bersihkan
+                </button>
+                <button
+                  type="button"
+                  onClick={handleParseText}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center space-x-1.5"
+                >
+                  <span>Analisa & Tinjau Soal</span>
+                </button>
+              </div>
+
+              {/* Preview parsed questions */}
+              {previewQuestions.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                      Tinjauan Hasil Parsing ({previewQuestions.length} Soal Terdeteksi)
+                    </h4>
+                    <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      Pastikan isi & kunci jawaban sudah pas sebelum disimpan!
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-2xl">
+                    {previewQuestions.map((q, idx) => (
+                      <div key={idx} className="bg-white p-4 border border-slate-200/60 rounded-xl space-y-2 text-xs shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-extrabold text-slate-850">Soal {idx + 1}</span>
+                          <span className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase ${
+                            q.type === 'multiple_choice' 
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                              : 'bg-purple-50 text-purple-700 border border-purple-200'
+                          }`}>
+                            {q.type === 'multiple_choice' ? 'Pilihan Ganda' : 'Essay'}
+                          </span>
+                        </div>
+                        <p className="font-semibold text-slate-800 whitespace-pre-line">{q.questionText}</p>
+                        
+                        {q.type === 'multiple_choice' && q.options.length > 0 && (
+                          <div className="grid grid-cols-1 gap-1.5 pl-3 pt-1">
+                            {q.options.map((opt: any) => (
+                              <div 
+                                key={opt.id} 
+                                className={`p-2 rounded-lg border text-[11px] flex items-center space-x-2 font-medium ${
+                                  q.correctAnswerId === opt.id
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200'
+                                }`}
+                              >
+                                <span className="font-bold text-[10px] uppercase bg-white px-1.5 py-0.5 rounded border border-inherit">
+                                  {opt.id.replace('opt-', '')}
+                                </span>
+                                <span className="truncate">{opt.text}</span>
+                                {q.correctAnswerId === opt.id && <Check className="w-3.5 h-3.5 ml-auto text-emerald-600 shrink-0" />}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {q.type === 'essay' && (
+                          <div className="bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-slate-700">
+                            <strong className="text-emerald-700 font-bold block mb-0.5">Acuan Jawaban Essay:</strong>
+                            <p className="italic leading-relaxed">{q.sampleAnswer || '-'}</p>
+                          </div>
+                        )}
+
+                        {q.explanation && (
+                          <div className="text-[10px] text-slate-500 italic pt-1">
+                            Pembahasan: {q.explanation}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveImport}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-550 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-emerald-600/25 transition-all text-center flex items-center justify-center space-x-2"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Simpan {previewQuestions.length} Soal ke Bank Soal</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
         </div>
