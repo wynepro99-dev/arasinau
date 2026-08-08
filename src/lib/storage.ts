@@ -16,6 +16,12 @@ function generateUniqueId(prefix: string): string {
 }
 
 export function getUserUsername(user: User): string {
+  // Custom override for Muhammad Rizky Hidayat Sujimin -> jimin
+  if (user.name.toLowerCase().includes('sujimin') || user.name.toLowerCase().includes('jimin')) {
+    const suffix = (user.company === 'SEC') ? 'sec' : 'ara';
+    return `jimin.${suffix}`;
+  }
+
   const words = user.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/);
   let firstName = words[0]?.toLowerCase() || '';
   if (firstName.length <= 1 && words.length > 1) {
