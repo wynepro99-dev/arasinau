@@ -123,10 +123,11 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-100 flex flex-col max-h-[90vh] animate-scale-in">
-        
-        {/* Header */}
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
+      <div className="flex min-h-full items-start justify-center p-4 sm:items-center sm:p-6">
+        <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-100 flex flex-col animate-scale-in my-auto">
+          
+          {/* Header */}
         <div className="shrink-0 flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-zinc-950 border-b border-slate-100 dark:border-zinc-800">
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Pengaturan Akun & Profil</h2>
@@ -256,6 +257,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           </button>
 
         </form>
+      </div>
       </div>
     </div>
   );
