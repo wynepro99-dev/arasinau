@@ -402,9 +402,9 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                   onChange={(e) => setScope(e.target.value as 'BANK' | 'SEC' | 'ALL')}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900 font-medium"
                 >
-                  <option value="BANK" className="dark:bg-zinc-900">BANK (Bank Utama)</option>
-                  <option value="SEC" className="dark:bg-zinc-900">SEC (Bimbel Anak Perusahaan)</option>
-                  <option value="ALL" className="dark:bg-zinc-900">ALL (Semua Perusahaan)</option>
+                  <option value="BANK" className="dark:bg-zinc-900">BANK</option>
+                  <option value="SEC" className="dark:bg-zinc-900">SEC</option>
+                  <option value="ALL" className="dark:bg-zinc-900">ALL</option>
                 </select>
               </div>
 

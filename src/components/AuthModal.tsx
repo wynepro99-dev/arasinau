@@ -270,8 +270,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onChange={(e) => setRegCompany(e.target.value as 'BANK' | 'SEC')}
                 className="w-full py-2.5 px-3 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500"
               >
-                <option value="BANK" className="dark:bg-zinc-900">BANK (Bank Utama)</option>
-                <option value="SEC" className="dark:bg-zinc-900">SEC (Bimbel Anak Perusahaan)</option>
+                <option value="BANK" className="dark:bg-zinc-900">BANK</option>
+                <option value="SEC" className="dark:bg-zinc-900">SEC</option>
               </select>
             </div>
 
