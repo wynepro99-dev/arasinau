@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ExamAttempt, ExamPackage, AttemptAnswer } from '../../types';
-import { getQuestions, updateAttempt, clearAllAttempts } from '../../lib/storage';
+import { getQuestions, updateAttempt, clearAllAttempts, getUsers } from '../../lib/storage';
 import { 
   Award, 
   Search, 
@@ -452,14 +452,25 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
-              {filteredAttempts.map((att) => (
-                <tr key={att.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-950/40 transition-colors">
-                  <td className="px-5 py-3.5 font-semibold text-slate-900 dark:text-white flex items-center space-x-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-zinc-800 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center shrink-0">
-                      {att.userName.substring(0, 1)}
-                    </div>
-                    <span>{att.userName}</span>
-                  </td>
+              {filteredAttempts.map((att) => {
+                const userObj = getUsers().find(u => u.id === att.userId);
+                
+                return (
+                  <tr key={att.id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-950/40 transition-colors">
+                    <td className="px-5 py-3.5 font-semibold text-slate-900 dark:text-white flex items-center space-x-2.5">
+                      {userObj?.avatar ? (
+                        <img 
+                          src={userObj.avatar} 
+                          alt="Avatar" 
+                          className="w-7 h-7 rounded-lg object-cover shadow-sm shrink-0"
+                        />
+                      ) : (
+                        <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-zinc-800 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center shrink-0">
+                          {att.userName.substring(0, 1)}
+                        </div>
+                      )}
+                      <span>{att.userName}</span>
+                    </td>
 
                   <td className="px-5 py-3.5 text-slate-500 dark:text-zinc-400">
                     <span className="px-2 py-0.5 bg-slate-100 dark:bg-zinc-950 text-slate-700 dark:text-zinc-400 rounded text-[11px] border border-transparent dark:border-zinc-800">
@@ -510,7 +521,8 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
 
               {filteredAttempts.length === 0 && (
                 <tr>
