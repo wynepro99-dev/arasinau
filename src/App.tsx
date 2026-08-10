@@ -66,8 +66,8 @@ export default function App() {
     setToast({ msg, type });
   };
 
-  const loadData = () => {
-    initStorage();
+  const loadData = async () => {
+    await initStorage();
     const user = getCurrentUser();
     setCurrentUserTab(user);
     setExams(getExams());

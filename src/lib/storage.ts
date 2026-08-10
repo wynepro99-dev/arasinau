@@ -38,7 +38,7 @@ function saveSessionUser(user: User | null) {
   try {
     if (typeof window !== 'undefined' && window.sessionStorage) {
       if (user) {
-        sessionStorage.setItem('ara_session_user', JSON.stringify(user));
+        sessionStorage.setItem('ara_session_user', JSON.stringify({ id: user.id }));
       } else {
         sessionStorage.removeItem('ara_session_user');
       }
@@ -48,13 +48,39 @@ function saveSessionUser(user: User | null) {
   }
 }
 
-export function initStorage() {
+export async function initStorage() {
   if (typeof window === 'undefined') return;
   try {
     if (window.sessionStorage) {
       const sess = sessionStorage.getItem('ara_session_user');
       if (sess) {
-        memoryCurrentUser = JSON.parse(sess);
+        const parsed = JSON.parse(sess);
+        if (parsed && parsed.id) {
+          const client = getSupabaseClient();
+          if (client) {
+            const { data, error } = await client
+              .from('users')
+              .select('*')
+              .eq('id', parsed.id)
+              .maybeSingle();
+
+            if (!error && data) {
+              memoryCurrentUser = {
+                id: data.id,
+                name: data.name,
+                email: data.email,
+                password: data.password || '123456',
+                role: data.role,
+                department: data.department,
+                avatar: data.avatar,
+                company: data.company || 'BANK'
+              };
+            } else {
+              memoryCurrentUser = null;
+              sessionStorage.removeItem('ara_session_user');
+            }
+          }
+        }
       }
     }
   } catch (e) {
@@ -137,25 +163,9 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
         company: u.company || 'BANK'
       }));
     } else if (!usersErr && (!usersData || usersData.length === 0)) {
-      // Database users table is empty, seed it with INITIAL_USERS
-      console.log('Seeding Supabase with INITIAL_USERS...');
-      const formattedUsers = INITIAL_USERS.map(u => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        password: u.password || '123456',
-        role: u.role,
-        department: u.department,
-        avatar: u.avatar,
-        company: u.company || 'BANK'
-      }));
-      const { error: seedErr } = await client.from('users').upsert(formattedUsers, { onConflict: 'email' });
-      if (seedErr) {
-        console.error('Failed to seed INITIAL_USERS:', seedErr.message);
-      }
-      memoryUsers = [...INITIAL_USERS];
+      console.warn('Fetch Users mengembalikan hasil kosong (kemungkinan terblokir RLS). Mempertahankan data lokal terakhir tanpa melakukan write-back.');
     } else if (usersErr) {
-      console.warn('Fetch Users Error from Supabase, falling back to memoryUsers:', usersErr.message);
+      console.warn('Fetch Users Error dari Supabase, mempertahankan data lokal terakhir:', usersErr.message);
     }
 
     // 3. Fetch exam packages
