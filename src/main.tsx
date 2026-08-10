@@ -60,6 +60,12 @@ if (typeof window !== 'undefined') {
       return false;
     }
 
+    // Ignore benign ResizeObserver loop errors (often triggered by layout animations in framer-motion)
+    if (msgStr.includes('ResizeObserver loop limit exceeded') || msgStr.includes('ResizeObserver loop completed with undelivered notifications')) {
+      console.warn('Ignored benign ResizeObserver error:', message);
+      return false;
+    }
+
     showErrorOverlay(
       `Unhandled Exception: ${msgStr}`,
       `Source: ${source}:${lineno}:${colno}`,
