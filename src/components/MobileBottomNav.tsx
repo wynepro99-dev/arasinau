@@ -186,11 +186,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const xVelocity = useVelocity(x);
   const dragControls = useDragControls();
   
-  // Smooth velocity for stable scaling
-  const smoothVelocity = useSpring(xVelocity, { stiffness: 400, damping: 50 });
+  // Smooth velocity for stable scaling (lighter physics)
+  const smoothVelocity = useSpring(xVelocity, { stiffness: 600, damping: 40 });
   
-  // Liquid stretch based on velocity (subtle deformation)
-  const scaleX = useTransform(smoothVelocity, [-1500, 0, 1500], [1.15, 1, 1.15]);
+  // Liquid stretch based on velocity (subtle deformation, less extreme)
+  const scaleX = useTransform(smoothVelocity, [-2000, 0, 2000], [1.08, 1, 1.08]);
 
   // Specular highlight shift (parallax effect inside the bubble)
   const highlightX = useTransform(x, [0, 300], ['-30%', '130%']);
@@ -208,8 +208,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const snapToActive = () => {
     const activeEl = buttonRefs.current[effectiveActiveTab];
     if (activeEl) {
-      animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
-      animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+      animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
+      animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
     }
   };
 
@@ -271,8 +271,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       // Snap IMMEDIATELY visually before react state update lag
       const activeEl = buttonRefs.current[closestKey];
       if (activeEl) {
-        animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
-        animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+        animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
+        animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
       }
       setActiveTab(closestKey);
     } else {
@@ -300,9 +300,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         }}
         transition={{
           type: 'spring',
-          stiffness: 350,
+          stiffness: 400,
           damping: 30,
-          mass: 0.8
+          mass: 0.5
         }}
         className={`
           pointer-events-auto
