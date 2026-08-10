@@ -51,6 +51,9 @@ export function getSupabaseClient(): SupabaseClient | null {
     try {
       supabaseInstance = createClient(url, key, {
         global: {
+          fetch: (fetchUrl, options) => {
+            return fetch(fetchUrl, { ...options, cache: 'no-store' });
+          },
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
