@@ -14,7 +14,8 @@ import {
   useSpring,
   useVelocity,
   animate,
-  PanInfo
+  PanInfo,
+  useDragControls
 } from 'framer-motion';
 import { useLiquidGlassNavigation } from '../hooks/useLiquidGlassNavigation';
 
@@ -88,7 +89,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const getTabIcon = (key: string, isActive: boolean) => {
     const iconProps = { 
       className: `w-[22px] h-[22px] transition-colors duration-300 ${
-        isActive ? 'text-white dark:text-zinc-50' : 'text-slate-500 dark:text-zinc-400'
+        isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
       }` 
     };
     switch (key) {
@@ -108,6 +109,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const x = useMotionValue(0);
   const width = useMotionValue(0);
   const xVelocity = useVelocity(x);
+  const dragControls = useDragControls();
   
   // Smooth velocity for stable scaling
   const smoothVelocity = useSpring(xVelocity, { stiffness: 400, damping: 50 });
@@ -208,9 +210,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         {/* The Draggable Liquid Bubble */}
         <motion.div
           drag="x"
+          dragControls={dragControls}
+          dragListener={false} // Only drag via controls
           dragConstraints={containerRef}
           dragElastic={0.15}
-          dragDirectionLock // Prevents bubble drag from interrupting vertical scroll
+          dragDirectionLock 
           onDragEnd={handleDragEnd}
           style={{
             x,
@@ -222,9 +226,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             borderRadius: 999,
           }}
           className={`
-            z-0 cursor-grab active:cursor-grabbing
-            bg-black/90 dark:bg-white/15
-            shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_2px_12px_rgba(0,0,0,0.2)]
+            z-0 pointer-events-none
+            bg-white/90 dark:bg-white/15
+            shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_4px_12px_rgba(0,0,0,0.08)]
             dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_12px_rgba(0,0,0,0.3)]
           `}
         >
@@ -248,8 +252,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               key={key}
               ref={(el) => { buttonRefs.current[key] = el; }}
               layout="position"
+              onPointerDown={(e) => {
+                if (isActive) dragControls.start(e);
+              }}
               onClick={() => setActiveTab(key)}
-              className="relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95"
+              className={`relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95 ${isActive ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
               style={{ flex: 1, minHeight: 44 }}
             >
               <motion.div layout="position" className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
@@ -263,7 +270,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                       exit={{ opacity: 0, height: 0, scale: 0.8 }}
                       transition={{ duration: 0.15, ease: "easeInOut" }}
                       className={`text-[10px] font-semibold tracking-tight mt-1 truncate max-w-[64px] px-1 ${
-                        isActive ? 'text-white dark:text-zinc-50' : 'text-slate-500 dark:text-zinc-400'
+                        isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
                       }`}
                     >
                       {getTabLabel(key)}
