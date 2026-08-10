@@ -307,6 +307,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             </button>
           </>
         ) : (
+          <>
             <button
               ref={(el) => { buttonRefs.current['employee_dashboard'] = el; }}
               onClick={() => setActiveTab('employee_dashboard')}
