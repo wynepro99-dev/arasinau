@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'karyawan';
+export type UserRole = 'admin' | 'karyawan' | 'egi';
 
 export interface User {
   id: string;
@@ -74,4 +74,14 @@ export interface ExamAttempt {
 
 export interface ExamWithQuestions extends ExamPackage {
   questions: Question[];
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string;
+  fileUrl: string; // Could be a real URL or base64 data URL
+  fileName: string;
+  uploadedBy: string; // User name
+  createdAt: string;
 }

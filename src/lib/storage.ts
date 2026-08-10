@@ -1,4 +1,4 @@
-import { User, ExamPackage, Question, ExamAttempt, ExamWithQuestions } from '../types';
+import { User, ExamPackage, Question, ExamAttempt, ExamWithQuestions, LearningModule } from '../types';
 import { INITIAL_USERS, INITIAL_EXAMS, INITIAL_QUESTIONS, INITIAL_ATTEMPTS } from '../data/mockData';
 import { getSupabaseClient } from './supabase';
 
@@ -7,6 +7,7 @@ let memoryUsers: User[] = [...INITIAL_USERS];
 let memoryExams: ExamPackage[] = [];
 let memoryQuestions: Question[] = [];
 let memoryAttempts: ExamAttempt[] = [];
+let memoryModules: LearningModule[] = [];
 let memoryCurrentUser: User | null = null;
 let isPerformingDelete = false;
 
@@ -85,6 +86,18 @@ export async function initStorage() {
     }
   } catch (e) {
     // Memory fallback
+  }
+
+  // Load Modules from localStorage
+  if (typeof window !== 'undefined') {
+    try {
+      const storedModules = localStorage.getItem('ara_learning_modules');
+      if (storedModules) {
+        memoryModules = JSON.parse(storedModules);
+      }
+    } catch (e) {
+      console.warn('Failed to load modules from localStorage');
+    }
   }
 
   // Auto trigger background sync if Supabase is connected
@@ -336,7 +349,7 @@ export function cleanupBrokenProfiles(): number {
   memoryUsers = memoryUsers.filter(u => {
     if (!u.name || typeof u.name !== 'string' || !u.name.trim() || u.name.includes('undefined') || u.name.includes('null')) return false;
     if (!u.email || typeof u.email !== 'string' || !u.email.trim() || !u.email.includes('@') || u.email.includes('undefined')) return false;
-    if (!u.role || (u.role !== 'admin' && u.role !== 'karyawan')) return false;
+    if (!u.role || (u.role !== 'admin' && u.role !== 'karyawan' && u.role !== 'egi')) return false;
     return true;
   });
   return initialCount - memoryUsers.length;
@@ -836,3 +849,33 @@ export function resetDemoData(): void {
   console.warn('resetDemoData is disabled to protect production data.');
 }
 
+// --- LEARNING MODULES ---
+function persistModules() {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('ara_learning_modules', JSON.stringify(memoryModules));
+    } catch (e) {
+      console.warn('Failed to save modules to localStorage');
+    }
+  }
+}
+
+export function getModules(): LearningModule[] {
+  return [...memoryModules].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export function addModule(module: Omit<LearningModule, 'id' | 'createdAt'>): LearningModule {
+  const newModule: LearningModule = {
+    ...module,
+    id: generateUniqueId('module'),
+    createdAt: new Date().toISOString()
+  };
+  memoryModules.push(newModule);
+  persistModules();
+  return newModule;
+}
+
+export function deleteModule(moduleId: string): void {
+  memoryModules = memoryModules.filter(m => m.id !== moduleId);
+  persistModules();
+}

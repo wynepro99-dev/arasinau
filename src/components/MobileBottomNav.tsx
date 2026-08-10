@@ -32,6 +32,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const [isSystemDark, setIsSystemDark] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
+  const isEgi = currentUser?.role === 'egi';
+  const isKaryawan = currentUser?.role === 'karyawan';
 
   useEffect(() => {
     // Detect system prefers-color-scheme
@@ -76,23 +78,29 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         };
       case 'employee_dashboard': // Magenta / Pink / Purple
       case 'employee_history':
-      default:
         return {
           gradientTop: 'from-pink-500 via-rose-400 to-purple-500',
           gradientBottom: 'from-purple-500 via-rose-400 to-pink-500',
           borderGlow: isSystemDark ? 'rgba(244, 114, 182, 0.25)' : 'rgba(236, 72, 153, 0.15)',
         };
+      case 'modules': // Indigo / Violet
+      default:
+        return {
+          gradientTop: 'from-indigo-500 via-violet-400 to-fuchsia-500',
+          gradientBottom: 'from-fuchsia-500 via-violet-400 to-indigo-500',
+          borderGlow: isSystemDark ? 'rgba(167, 139, 250, 0.25)' : 'rgba(139, 92, 246, 0.15)',
+        };
     }
   };
 
   const getButtonClass = (key: string) => {
-    const isActive = isAdmin
+    const isActive = (isAdmin || isEgi)
       ? (key === 'employee_dashboard' ? (activeTab === 'employee_dashboard' || activeTab === 'employee_history') : activeTab === key)
       : activeTab === key;
 
     if (isActive) {
       return `relative z-10 flex flex-col items-center justify-center pt-3 pb-2 px-3 rounded-full transition-all duration-250 active:scale-90 select-none ${
-        isAdmin ? 'min-w-[72px]' : 'min-w-[90px]'
+        (isAdmin || isKaryawan) ? 'min-w-[64px]' : 'min-w-[90px]'
       } text-slate-900 dark:text-zinc-100 font-black scale-[1.03] ${
         key === 'dashboard' ? 'dark:drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]' :
         key === 'exams' ? 'dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]' :
@@ -102,7 +110,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     }
 
     return `relative z-10 flex flex-col items-center justify-center pt-3 pb-2 px-3 rounded-full transition-all duration-250 active:scale-90 select-none ${
-      isAdmin ? 'min-w-[72px]' : 'min-w-[90px]'
+      (isAdmin || isKaryawan) ? 'min-w-[64px]' : 'min-w-[90px]'
     } text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold`;
   };
 
@@ -110,7 +118,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     if (!currentUser || isTakingExam) return;
 
     let key = activeTab;
-    if (isAdmin && (activeTab === 'employee_dashboard' || activeTab === 'employee_history')) {
+    if ((isAdmin || isEgi) && (activeTab === 'employee_dashboard' || activeTab === 'employee_history')) {
       key = 'employee_dashboard';
     }
     
@@ -161,8 +169,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     let minDistance = Infinity;
 
     const keys = isAdmin 
-      ? ['dashboard', 'exams', 'scores', 'employee_dashboard'] 
-      : ['employee_dashboard', 'employee_history'];
+      ? ['dashboard', 'exams', 'scores', 'employee_dashboard', 'modules'] 
+      : isEgi 
+        ? ['scores', 'modules']
+        : ['employee_dashboard', 'employee_history', 'modules'];
 
     keys.forEach(key => {
       const el = buttonRefs.current[key];
@@ -247,7 +257,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               className={getButtonClass('exams')}
             >
               <BookOpen className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Paket Ujian</span>
+              <span className="text-[10px] mt-1 tracking-tight">Ujian</span>
             </button>
 
             <button
@@ -265,18 +275,45 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               className={getButtonClass('employee_dashboard')}
             >
               <BookOpen className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Ikuti Ujian</span>
+              <span className="text-[10px] mt-1 tracking-tight">Ikut</span>
+            </button>
+
+            <button
+              ref={(el) => { buttonRefs.current['modules'] = el; }}
+              onClick={() => setActiveTab('modules')}
+              className={getButtonClass('modules')}
+            >
+              <BookOpen className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Modul</span>
+            </button>
+          </>
+        ) : isEgi ? (
+          <>
+            <button
+              ref={(el) => { buttonRefs.current['scores'] = el; }}
+              onClick={() => setActiveTab('scores')}
+              className={getButtonClass('scores')}
+            >
+              <Award className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Nilai</span>
+            </button>
+            <button
+              ref={(el) => { buttonRefs.current['modules'] = el; }}
+              onClick={() => setActiveTab('modules')}
+              className={getButtonClass('modules')}
+            >
+              <BookOpen className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Modul</span>
             </button>
           </>
         ) : (
-          <>
             <button
               ref={(el) => { buttonRefs.current['employee_dashboard'] = el; }}
               onClick={() => setActiveTab('employee_dashboard')}
               className={getButtonClass('employee_dashboard')}
             >
               <BookOpen className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Ujian Saya</span>
+              <span className="text-[10px] mt-1 tracking-tight">Ujian</span>
             </button>
 
             <button
@@ -285,7 +322,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               className={getButtonClass('employee_history')}
             >
               <History className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Riwayat Nilai</span>
+              <span className="text-[10px] mt-1 tracking-tight">Riwayat</span>
+            </button>
+
+            <button
+              ref={(el) => { buttonRefs.current['modules'] = el; }}
+              onClick={() => setActiveTab('modules')}
+              className={getButtonClass('modules')}
+            >
+              <BookOpen className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Modul</span>
             </button>
           </>
         )}

@@ -23,6 +23,7 @@ import { ExamTakingScreen } from './components/employee/ExamTakingScreen';
 import { ExamResultModal } from './components/employee/ExamResultModal';
 import { Toast } from './components/Toast';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { ModulesDashboard } from './components/modules/ModulesDashboard';
 
 export default function App() {
   const [currentUser, setCurrentUserTab] = useState<User | null>(() => {
@@ -33,6 +34,7 @@ export default function App() {
       const user = getCurrentUser();
       if (user) {
         if (user.role === 'karyawan') return 'employee_dashboard';
+        if (user.role === 'egi') return 'scores';
         try {
           const savedTab = localStorage.getItem('ara_active_tab');
           return savedTab || 'dashboard';
@@ -77,6 +79,8 @@ export default function App() {
     if (user) {
       if (user.role === 'karyawan' && (activeTab === 'dashboard' || activeTab === 'exams' || activeTab === 'scores')) {
         setActiveTab('employee_dashboard');
+      } else if (user.role === 'egi' && (activeTab === 'dashboard' || activeTab === 'exams' || activeTab === 'employee_dashboard' || activeTab === 'employee_history')) {
+        setActiveTab('scores');
       }
     }
   };
@@ -101,9 +105,12 @@ export default function App() {
           const user = getCurrentUser();
           if (user) {
             const isKaryawan = user.role === 'karyawan';
+            const isEgi = user.role === 'egi';
             const isAdminTab = savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'scores';
             if (isKaryawan && isAdminTab) {
               setActiveTab('employee_dashboard');
+            } else if (isEgi && (savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'employee_dashboard' || savedTab === 'employee_history')) {
+              setActiveTab('scores');
             } else {
               setActiveTab(savedTab);
             }
@@ -196,6 +203,8 @@ export default function App() {
     if (user) {
       if (user.role === 'admin') {
         setActiveTab('dashboard');
+      } else if (user.role === 'egi') {
+        setActiveTab('scores');
       } else {
         setActiveTab('employee_dashboard');
       }
@@ -268,10 +277,10 @@ export default function App() {
           />
         ) : (
           <>
-            {/* ADMIN PANELS */}
-            {currentUser && currentUser.role === 'admin' && (
+            {/* ADMIN & EGI PANELS */}
+            {currentUser && (currentUser.role === 'admin' || currentUser.role === 'egi') && (
               <>
-                {activeTab === 'dashboard' && (
+                {currentUser.role === 'admin' && activeTab === 'dashboard' && (
                   <AdminDashboard
                     exams={exams}
                     questions={questions}
@@ -284,7 +293,7 @@ export default function App() {
                   />
                 )}
 
-                {activeTab === 'exams' && (
+                {currentUser.role === 'admin' && activeTab === 'exams' && (
                   <ExamManagement
                     currentUser={currentUser}
                     exams={exams}
@@ -304,7 +313,7 @@ export default function App() {
                   />
                 )}
 
-                {(activeTab === 'employee_dashboard' || activeTab === 'employee_history') && (
+                {currentUser.role === 'admin' && (activeTab === 'employee_dashboard' || activeTab === 'employee_history') && (
                   <EmployeeDashboard
                     currentUser={currentUser}
                     exams={exams}
@@ -318,8 +327,13 @@ export default function App() {
               </>
             )}
 
+            {/* MODULES PANEL (ALL ROLES) */}
+            {currentUser && activeTab === 'modules' && (
+              <ModulesDashboard currentUser={currentUser} onToast={showToast} />
+            )}
+
             {/* EMPLOYEE PANELS */}
-            {currentUser && currentUser.role === 'karyawan' && (
+            {currentUser && (currentUser.role === 'karyawan' || (currentUser.role === 'egi' && activeTab.startsWith('employee'))) && (
               <EmployeeDashboard
                 currentUser={currentUser}
                 exams={exams}
