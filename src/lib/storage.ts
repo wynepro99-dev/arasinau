@@ -410,67 +410,58 @@ export async function registerUser(newUser: Omit<User, 'id'>): Promise<User> {
 }
 
 export async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
-  const idx = memoryUsers.findIndex(u => u.id === userId || (updates.email && u.email.toLowerCase() === updates.email.toLowerCase()));
-  if (idx === -1) {
-    throw new Error('User tidak ditemukan.');
-  }
-
-  const updated = { ...memoryUsers[idx] };
-  if (updates.name !== undefined) updated.name = updates.name;
-  if (updates.email !== undefined) updated.email = updates.email;
-  if (updates.password !== undefined) updated.password = updates.password;
-  if (updates.role !== undefined) updated.role = updates.role;
-  if (updates.department !== undefined) updated.department = updates.department;
-  if (updates.avatar !== undefined) updated.avatar = updates.avatar;
-  if (updates.company !== undefined) updated.company = updates.company;
-
-  memoryUsers[idx] = updated;
-
-  // If this is the current logged-in user, sync the current user state
-  if (memoryCurrentUser && (memoryCurrentUser.id === userId || memoryCurrentUser.email.toLowerCase() === updated.email.toLowerCase())) {
-    saveSessionUser(updated);
-  }
-
   const client = getSupabaseClient();
+  let dbResult: User | null = null;
+
   if (client) {
-    // 1. Try update by email (unique identifier) with .select() verification
-    const { data: emailRows, error: emailErr } = await client.from('users').update({
-      name: updated.name,
-      email: updated.email,
-      password: updated.password,
-      role: updated.role,
-      department: updated.department,
-      avatar: updated.avatar,
-      company: updated.company || 'BANK'
-    }).eq('email', updated.email).select();
+    const patchPayload: any = {};
+    if (updates.name !== undefined) patchPayload.name = updates.name;
+    if (updates.email !== undefined) patchPayload.email = updates.email;
+    if (updates.password !== undefined) patchPayload.password = updates.password;
+    if (updates.role !== undefined) patchPayload.role = updates.role;
+    if (updates.department !== undefined) patchPayload.department = updates.department;
+    if (updates.avatar !== undefined) patchPayload.avatar = updates.avatar;
+    if (updates.company !== undefined) patchPayload.company = updates.company;
 
-    if (emailErr) {
-      throw new Error(`Gagal menyimpan perubahan ke database: ${emailErr.message}`);
+    if (Object.keys(patchPayload).length === 0) {
+      throw new Error('Tidak ada data yang diubah.');
     }
 
-    // 2. If no rows matched by email, fallback to update by id
-    if (!emailRows || emailRows.length === 0) {
-      const { data: idRows, error: idErr } = await client.from('users').update({
-        name: updated.name,
-        email: updated.email,
-        password: updated.password,
-        role: updated.role,
-        department: updated.department,
-        avatar: updated.avatar,
-        company: updated.company || 'BANK'
-      }).eq('id', userId).select();
+    const { data, error } = await client
+      .from('users')
+      .update(patchPayload)
+      .eq('id', userId)
+      .select()
+      .maybeSingle();
 
-      if (idErr) {
-        throw new Error(`Gagal menyimpan perubahan ke database: ${idErr.message}`);
-      }
+    if (error) throw new Error(`Gagal menyimpan perubahan ke database: ${error.message}`);
+    if (!data) throw new Error('Data user tidak ditemukan di database Supabase.');
 
-      if (!idRows || idRows.length === 0) {
-        throw new Error('Data user tidak ditemukan di database Supabase.');
-      }
-    }
+    dbResult = {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      password: data.password || '123456',
+      role: data.role,
+      department: data.department,
+      avatar: data.avatar,
+      company: data.company || 'BANK'
+    };
   }
 
-  return updated;
+  const idx = memoryUsers.findIndex(u => u.id === userId);
+  
+  const finalUser = dbResult || { ...(idx !== -1 ? memoryUsers[idx] : {} as User), ...updates };
+  
+  if (idx !== -1) {
+    memoryUsers[idx] = finalUser;
+  }
+
+  if (memoryCurrentUser && memoryCurrentUser.id === userId) {
+    saveSessionUser(finalUser);
+  }
+
+  return finalUser;
 }
 
 // --- EXAMS ---
