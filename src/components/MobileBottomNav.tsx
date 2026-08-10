@@ -208,8 +208,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const snapToActive = () => {
     const activeEl = buttonRefs.current[effectiveActiveTab];
     if (activeEl) {
-      animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
-      animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
+      animate(x, activeEl.offsetLeft, { type: 'spring', bounce: 0.15, duration: 0.35 });
+      animate(width, activeEl.offsetWidth, { type: 'spring', bounce: 0.15, duration: 0.35 });
     }
   };
 
@@ -271,8 +271,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       // Snap IMMEDIATELY visually before react state update lag
       const activeEl = buttonRefs.current[closestKey];
       if (activeEl) {
-        animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
-        animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 600, damping: 28, mass: 0.3 });
+        animate(x, activeEl.offsetLeft, { type: 'spring', bounce: 0.15, duration: 0.35 });
+        animate(width, activeEl.offsetWidth, { type: 'spring', bounce: 0.15, duration: 0.35 });
       }
       setActiveTab(closestKey);
     } else {
@@ -300,9 +300,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         }}
         transition={{
           type: 'spring',
-          stiffness: 400,
-          damping: 30,
-          mass: 0.5
+          bounce: 0.15,
+          duration: 0.4
         }}
         className={`
           pointer-events-auto
