@@ -232,21 +232,25 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       });
     };
 
-    // Use ResizeObserver to flawlessly track layout shifts (e.g. initial render, orientation change, layout reflows)
-    const observer = new ResizeObserver(() => {
-      // Wrap in requestAnimationFrame to prevent "ResizeObserver loop limit exceeded" error
-      window.requestAnimationFrame(() => {
-        updateLayout();
-      });
-    });
+    // Delay initially to ensure fonts/layout are fully painted
+    const timeoutId = setTimeout(() => {
+      updateLayout();
+    }, 100);
     
-    observer.observe(containerRef.current);
-    
-    // Trigger immediately for dependency changes (like tab clicks)
+    // Trigger immediately for dependency changes
     updateLayout();
 
+    const handleResize = () => {
+      requestAnimationFrame(updateLayout);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+
     return () => {
-      observer.disconnect();
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [effectiveActiveTab, isCompact, tabKeys.length]);
