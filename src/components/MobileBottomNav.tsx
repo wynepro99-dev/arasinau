@@ -66,9 +66,9 @@ const NavButton = ({
     const bubbleCenter = latestX + width.get() / 2;
     const distance = Math.abs(bubbleCenter - center);
     
-    // Magnify up to 1.3x when bubble is exactly over the icon
-    if (distance > 60) return 1;
-    return 1 + (0.3 * (1 - distance / 60));
+    // Magnify up to 1.2x when bubble is exactly over the icon
+    if (distance > 50) return 1;
+    return 1 + (0.2 * (1 - distance / 50));
   });
 
   return (
@@ -80,8 +80,10 @@ const NavButton = ({
       className={`relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95 ${isActive ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
       style={{ touchAction: isActive ? 'none' : 'auto', flex: 1, minHeight: 44 }}
     >
-      <motion.div layout="position" style={{ scale }} className="relative z-10 flex flex-col items-center justify-center pointer-events-none origin-bottom">
-        {icon}
+      <motion.div layout="position" className="relative z-10 flex flex-col items-center justify-center pointer-events-none origin-bottom">
+        <motion.div style={{ scale }} className="flex items-center justify-center">
+          {icon}
+        </motion.div>
         
         <AnimatePresence>
           {!isCompact && (
@@ -228,19 +230,28 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   // Snap to active element on mount and layout changes
   useEffect(() => {
-    let rafId: number;
-    let timeoutId: NodeJS.Timeout;
+    if (!containerRef.current) return;
     
-    // Slight delay is crucial for initial mount layout calculation so it hits the precise icon
-    timeoutId = setTimeout(() => {
+    let rafId: number;
+    const updateLayout = () => {
       calculateCenters();
       rafId = requestAnimationFrame(() => {
         snapToActive();
       });
-    }, 50);
+    };
+
+    // Use ResizeObserver to flawlessly track layout shifts (e.g. initial render, orientation change, layout reflows)
+    const observer = new ResizeObserver(() => {
+      updateLayout();
+    });
+    
+    observer.observe(containerRef.current);
+    
+    // Trigger immediately for dependency changes (like tab clicks)
+    updateLayout();
 
     return () => {
-      clearTimeout(timeoutId);
+      observer.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [effectiveActiveTab, isCompact, tabKeys.length]);
