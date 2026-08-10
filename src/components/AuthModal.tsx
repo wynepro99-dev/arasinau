@@ -63,50 +63,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     });
 
     if (found) {
-      let latestUser = found;
+      let latestUser = null;
+      let dbErrorMsg = '';
 
-      // Query database directly to bypass sync lag and ensure the newest password is verified
       try {
         const client = getSupabaseClient();
-        if (client) {
-          let dbUser = null;
+        if (!client) {
+          onToast('Gagal terhubung ke database. Konfigurasi belum tersedia.', 'error');
+          return;
+        }
 
-          // 1. Try query by email first (unique constraint)
-          const { data: byEmail, error: emailErr } = await client
+        let dbUser = null;
+
+        // 1. Try query by email first (unique constraint)
+        const { data: byEmail, error: emailErr } = await client
+          .from('users')
+          .select('*')
+          .eq('email', found.email)
+          .maybeSingle();
+
+        if (emailErr) {
+          dbErrorMsg = emailErr.message;
+        } else if (byEmail) {
+          dbUser = byEmail;
+        } else {
+          // 2. Fallback query by id
+          const { data: byId, error: idErr } = await client
             .from('users')
             .select('*')
-            .eq('email', found.email)
+            .eq('id', found.id)
             .maybeSingle();
-
-          if (!emailErr && byEmail) {
-            dbUser = byEmail;
-          } else {
-            // 2. Fallback query by id
-            const { data: byId, error: idErr } = await client
-              .from('users')
-              .select('*')
-              .eq('id', found.id)
-              .maybeSingle();
-            if (!idErr && byId) {
-              dbUser = byId;
-            }
-          }
-
-          if (dbUser) {
-            latestUser = {
-              id: dbUser.id,
-              name: dbUser.name,
-              email: dbUser.email,
-              password: dbUser.password || '123456',
-              role: dbUser.role,
-              department: dbUser.department,
-              avatar: dbUser.avatar,
-              company: dbUser.company || 'BANK'
-            };
+            
+          if (idErr) {
+            dbErrorMsg = idErr.message;
+          } else if (byId) {
+            dbUser = byId;
           }
         }
-      } catch (e) {
-        console.warn('Direct database validation fallback:', e);
+
+        if (dbUser) {
+          latestUser = {
+            id: dbUser.id,
+            name: dbUser.name,
+            email: dbUser.email,
+            password: dbUser.password || '123456',
+            role: dbUser.role,
+            department: dbUser.department,
+            avatar: dbUser.avatar,
+            company: dbUser.company || 'BANK'
+          };
+        }
+      } catch (e: any) {
+        dbErrorMsg = e.message || 'Koneksi terputus atau gagal melakukan fetch';
+        console.warn('Direct database validation failed:', e);
+      }
+
+      if (!latestUser) {
+        onToast(`Login gagal. Tidak dapat memvalidasi data ke server. (Error: ${dbErrorMsg || 'User tidak ditemukan di DB'})`, 'error');
+        return;
       }
 
       const userPassword = latestUser.password || '123456';
