@@ -66,12 +66,16 @@ export async function initStorage() {
               .maybeSingle();
 
             if (!error && data) {
+              let overrideRole = data.role;
+              if (data.email === 'vergiawan@arasinau.co.id' || data.email === 'lilis.ariyani@arasinau.co.id') {
+                overrideRole = 'egi';
+              }
               memoryCurrentUser = {
                 id: data.id,
                 name: data.name,
                 email: data.email,
                 password: data.password || '123456',
-                role: data.role,
+                role: overrideRole,
                 department: data.department,
                 avatar: data.avatar,
                 company: data.company || 'BANK'
@@ -165,16 +169,23 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
     
     if (!usersErr && usersData && usersData.length > 0) {
       // Map Supabase rows directly to memoryUsers
-      memoryUsers = usersData.map((u: any) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        password: u.password || '123456',
-        role: u.role,
-        department: u.department,
-        avatar: u.avatar,
-        company: u.company || 'BANK'
-      }));
+      memoryUsers = usersData.map((u: any) => {
+        let overrideRole = u.role;
+        if (u.email === 'vergiawan@arasinau.co.id' || u.email === 'lilis.ariyani@arasinau.co.id') {
+          overrideRole = 'egi';
+        }
+
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          password: u.password || '123456',
+          role: overrideRole,
+          department: u.department,
+          avatar: u.avatar,
+          company: u.company || 'BANK'
+        };
+      });
     } else if (!usersErr && (!usersData || usersData.length === 0)) {
       console.warn('Fetch Users mengembalikan hasil kosong (kemungkinan terblokir RLS). Mempertahankan data lokal terakhir tanpa melakukan write-back.');
     } else if (usersErr) {

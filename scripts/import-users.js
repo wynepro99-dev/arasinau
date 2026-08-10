@@ -14,10 +14,10 @@ async function importUsers() {
 
     console.log(`Found ${records.length} users to import...`);
 
-    // Insert users
+    // Upsert users
     const { error } = await supabase
       .from('users')
-      .insert(records);
+      .upsert(records);
 
     if (error) {
       console.error('Error inserting users:', error);
