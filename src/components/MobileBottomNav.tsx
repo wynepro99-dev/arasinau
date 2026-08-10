@@ -52,8 +52,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, []);
 
-  if (!currentUser || isTakingExam) return null;
-
+  // Early return moved to bottom to prevent React Hook errors
   // Configuration of tabs based on role
   let tabKeys: string[] = [];
   if (isAdmin) {
@@ -168,6 +167,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       snapToActive(); // Snap back to current if it hasn't changed
     }
   };
+
+  if (!currentUser || isTakingExam) return null;
 
   return (
     <div 
