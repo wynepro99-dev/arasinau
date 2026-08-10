@@ -161,6 +161,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <Award className="w-4 h-4" />
                     <span>Laporan Nilai</span>
                   </button>
+                  <button
+                    onClick={() => setActiveTab('employee_dashboard')}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      activeTab === 'employee_dashboard' || activeTab === 'employee_history'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-950/50'
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Ikuti Ujian</span>
+                  </button>
                 </>
               ) : (
                 <>

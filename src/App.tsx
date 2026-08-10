@@ -79,7 +79,7 @@ export default function App() {
     if (user) {
       if (user.role === 'karyawan' && (activeTab === 'dashboard' || activeTab === 'exams' || activeTab === 'scores')) {
         setActiveTab('employee_dashboard');
-      } else if (user.role === 'egi' && (activeTab === 'dashboard' || activeTab === 'exams' || activeTab === 'employee_dashboard' || activeTab === 'employee_history')) {
+      } else if (user.role === 'egi' && (activeTab === 'dashboard' || activeTab === 'exams')) {
         setActiveTab('scores');
       }
     }
@@ -109,7 +109,7 @@ export default function App() {
             const isAdminTab = savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'scores';
             if (isKaryawan && isAdminTab) {
               setActiveTab('employee_dashboard');
-            } else if (isEgi && (savedTab === 'dashboard' || savedTab === 'exams' || savedTab === 'employee_dashboard' || savedTab === 'employee_history')) {
+            } else if (isEgi && (savedTab === 'dashboard' || savedTab === 'exams')) {
               setActiveTab('scores');
             } else {
               setActiveTab(savedTab);
