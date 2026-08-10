@@ -171,7 +171,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     const keys = isAdmin 
       ? ['dashboard', 'exams', 'modules', 'scores', 'employee_dashboard'] 
       : isEgi 
-        ? ['modules', 'scores', 'employee_dashboard']
+        ? ['employee_dashboard', 'modules', 'employee_history', 'scores']
         : ['employee_dashboard', 'employee_history', 'modules'];
 
     keys.forEach(key => {
@@ -290,6 +290,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         ) : isEgi ? (
           <>
             <button
+              ref={(el) => { buttonRefs.current['employee_dashboard'] = el; }}
+              onClick={() => setActiveTab('employee_dashboard')}
+              className={getButtonClass('employee_dashboard')}
+            >
+              <BookOpen className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Ujian</span>
+            </button>
+            <button
               ref={(el) => { buttonRefs.current['modules'] = el; }}
               onClick={() => setActiveTab('modules')}
               className={getButtonClass('modules')}
@@ -298,20 +306,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <span className="text-[10px] mt-1 tracking-tight">Modul</span>
             </button>
             <button
+              ref={(el) => { buttonRefs.current['employee_history'] = el; }}
+              onClick={() => setActiveTab('employee_history')}
+              className={getButtonClass('employee_history')}
+            >
+              <Award className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Riwayat</span>
+            </button>
+            <button
               ref={(el) => { buttonRefs.current['scores'] = el; }}
               onClick={() => setActiveTab('scores')}
               className={getButtonClass('scores')}
             >
               <Award className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Nilai</span>
-            </button>
-            <button
-              ref={(el) => { buttonRefs.current['employee_dashboard'] = el; }}
-              onClick={() => setActiveTab('employee_dashboard')}
-              className={getButtonClass('employee_dashboard')}
-            >
-              <BookOpen className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Ikut</span>
+              <span className="text-[10px] mt-1 tracking-tight">Laporan</span>
             </button>
           </>
         ) : (
