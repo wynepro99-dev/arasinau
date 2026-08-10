@@ -196,13 +196,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const highlightX = useTransform(x, [0, 300], ['-30%', '130%']);
 
   const calculateCenters = () => {
-    if (!containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
     tabKeys.forEach(k => {
       const el = buttonRefs.current[k];
       if (el) {
-        const rect = el.getBoundingClientRect();
-        buttonCenters.current[k] = (rect.left - containerRect.left) + rect.width / 2;
+        buttonCenters.current[k] = el.offsetLeft + el.offsetWidth / 2;
       }
     });
   };
@@ -210,13 +207,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   // Move the bubble to the currently active tab
   const snapToActive = () => {
     const activeEl = buttonRefs.current[effectiveActiveTab];
-    if (activeEl && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const elRect = activeEl.getBoundingClientRect();
-      const localX = elRect.left - containerRect.left;
-      
-      animate(x, localX, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
-      animate(width, elRect.width, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+    if (activeEl) {
+      animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+      animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
     }
   };
 
@@ -256,20 +249,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   }, [effectiveActiveTab, isCompact, tabKeys.length]);
 
   const handleDragEnd = (event: any, info: PanInfo) => {
-    if (!containerRef.current) return;
-    
     // Precise local calculation independent of scroll/viewport jumps
     const localBubbleCenter = x.get() + width.get() / 2;
     let closestKey = effectiveActiveTab;
     let minDistance = Infinity;
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-
     tabKeys.forEach(key => {
       const el = buttonRefs.current[key];
       if (el) {
-        const elRect = el.getBoundingClientRect();
-        const localButtonCenter = (elRect.left - containerRect.left) + elRect.width / 2;
+        const localButtonCenter = el.offsetLeft + el.offsetWidth / 2;
         const dist = Math.abs(localBubbleCenter - localButtonCenter);
         
         if (dist < minDistance) {
@@ -283,10 +271,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       // Snap IMMEDIATELY visually before react state update lag
       const activeEl = buttonRefs.current[closestKey];
       if (activeEl) {
-        const elRect = activeEl.getBoundingClientRect();
-        const localX = elRect.left - containerRect.left;
-        animate(x, localX, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
-        animate(width, elRect.width, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+        animate(x, activeEl.offsetLeft, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+        animate(width, activeEl.offsetWidth, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
       }
       setActiveTab(closestKey);
     } else {
