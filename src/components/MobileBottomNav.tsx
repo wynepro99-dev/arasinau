@@ -370,7 +370,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             x={x}
             width={width}
             setRef={(el: HTMLButtonElement | null) => { buttonRefs.current[key] = el; }}
-            onClick={() => setActiveTab(key)}
+            onClick={() => {
+              // Zero-latency instant snap (bypasses React render cycle delay)
+              const el = buttonRefs.current[key];
+              if (el) {
+                animate(x, el.offsetLeft, { type: 'spring', bounce: 0.15, duration: 0.35 });
+                animate(width, el.offsetWidth, { type: 'spring', bounce: 0.15, duration: 0.35 });
+              }
+              setActiveTab(key);
+            }}
             onPointerDown={(e: any) => {
               if (effectiveActiveTab === key) dragControls.start(e);
             }}
