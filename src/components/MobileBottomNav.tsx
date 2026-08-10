@@ -109,9 +109,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       }`;
     }
 
-    return `relative z-10 flex flex-col items-center justify-center pt-3 pb-2 px-3 rounded-full transition-all duration-250 active:scale-90 select-none ${
-      (isAdmin || isKaryawan) ? 'min-w-[64px]' : 'min-w-[90px]'
-    } text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold`;
+    return `relative z-10 flex flex-col items-center justify-center pt-3 pb-2 px-1 sm:px-3 flex-1 rounded-full transition-all duration-250 active:scale-90 select-none text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold`;
   };
 
   useEffect(() => {

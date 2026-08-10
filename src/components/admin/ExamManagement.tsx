@@ -163,7 +163,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="flex items-center space-x-2 shrink-0 w-full sm:w-auto">
           {exams.length > 0 && (
             <button
               onClick={async () => {
@@ -177,15 +177,16 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                   onRefresh();
                 }
               }}
-              className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold border border-transparent dark:border-rose-900/40 transition-all flex items-center space-x-1.5"
+              className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold border border-transparent dark:border-rose-900/40 transition-all flex items-center justify-center space-x-1.5 shrink-0"
+              title="Hapus Semua Paket Ujian"
             >
               <Trash2 className="w-4 h-4" />
-              <span>Hapus Semua Paket Ujian</span>
+              <span className="hidden sm:inline whitespace-nowrap">Hapus Semua Paket Ujian</span>
             </button>
           )}
           <button
             onClick={handleOpenCreateModal}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 dark:shadow-none transition-all flex items-center justify-center space-x-2 shrink-0"
+            className="flex-1 sm:flex-none px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 dark:shadow-none transition-all flex items-center justify-center space-x-2 shrink-0 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             <span>Buat Paket Ujian Baru</span>
