@@ -242,7 +242,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
     // Use ResizeObserver to flawlessly track layout shifts (e.g. initial render, orientation change, layout reflows)
     const observer = new ResizeObserver(() => {
-      updateLayout();
+      // Wrap in requestAnimationFrame to prevent "ResizeObserver loop limit exceeded" error
+      window.requestAnimationFrame(() => {
+        updateLayout();
+      });
     });
     
     observer.observe(containerRef.current);
