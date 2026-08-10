@@ -241,17 +241,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           className={`
             z-0 pointer-events-none
             backdrop-blur-md saturate-150
-            bg-white/20 dark:bg-[#2A2A2A]/40
-            border border-white/50 dark:border-white/10
-            shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.05)]
-            dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.3)]
+            bg-[rgba(255,255,255,0.40)] dark:bg-[rgba(20,20,24,0.40)]
+            border border-[rgba(255,255,255,0.45)] dark:border-[rgba(255,255,255,0.16)]
+            shadow-[0_4px_12px_rgba(0,0,0,0.05)]
+            dark:shadow-[0_4px_12px_rgba(0,0,0,0.25)]
           `}
         >
           {/* Specular Highlight inside Bubble */}
           <motion.div 
-            className="absolute inset-0 rounded-full pointer-events-none opacity-50 dark:opacity-30"
+            className="absolute inset-0 rounded-full pointer-events-none"
             style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+              background: isSystemDark 
+                ? 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.10) 50%, transparent 100%)'
+                : 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
               backgroundPosition: highlightX,
               backgroundSize: '200% 100%',
               backgroundRepeat: 'no-repeat'
