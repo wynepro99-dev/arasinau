@@ -146,16 +146,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const handleDragEnd = (event: any, info: PanInfo) => {
     if (!containerRef.current) return;
     
-    const currentAbsoluteX = containerRef.current.getBoundingClientRect().left + x.get() + width.get() / 2;
+    // Precise local calculation independent of scroll/viewport jumps
+    const localBubbleCenter = x.get() + width.get() / 2;
     let closestKey = effectiveActiveTab;
     let minDistance = Infinity;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
 
     tabKeys.forEach(key => {
       const el = buttonRefs.current[key];
       if (el) {
         const elRect = el.getBoundingClientRect();
-        const center = elRect.left + elRect.width / 2;
-        const dist = Math.abs(currentAbsoluteX - center);
+        const localButtonCenter = (elRect.left - containerRect.left) + elRect.width / 2;
+        const dist = Math.abs(localBubbleCenter - localButtonCenter);
         
         if (dist < minDistance) {
           minDistance = dist;
@@ -226,6 +229,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           dragDirectionLock 
           onDragEnd={handleDragEnd}
           style={{
+            left: 0, // CRITICAL FIX: Ensures x is perfectly aligned with container padding
             x,
             width,
             scaleX,
@@ -268,7 +272,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               }}
               onClick={() => setActiveTab(key)}
               className={`relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95 ${isActive ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
-              style={{ flex: 1, minHeight: 44 }}
+              style={{ touchAction: isActive ? 'none' : 'auto', flex: 1, minHeight: 44 }}
             >
               <motion.div layout="position" className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
                 {getTabIcon(key, isActive)}
