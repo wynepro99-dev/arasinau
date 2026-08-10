@@ -169,9 +169,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     let minDistance = Infinity;
 
     const keys = isAdmin 
-      ? ['dashboard', 'exams', 'scores', 'employee_dashboard', 'modules'] 
+      ? ['dashboard', 'exams', 'modules', 'scores', 'employee_dashboard'] 
       : isEgi 
-        ? ['scores', 'modules']
+        ? ['modules', 'scores']
         : ['employee_dashboard', 'employee_history', 'modules'];
 
     keys.forEach(key => {
@@ -261,6 +261,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             </button>
 
             <button
+              ref={(el) => { buttonRefs.current['modules'] = el; }}
+              onClick={() => setActiveTab('modules')}
+              className={getButtonClass('modules')}
+            >
+              <BookOpen className="w-5 h-5 transition-transform duration-200" />
+              <span className="text-[10px] mt-1 tracking-tight">Modul</span>
+            </button>
+
+            <button
               ref={(el) => { buttonRefs.current['scores'] = el; }}
               onClick={() => setActiveTab('scores')}
               className={getButtonClass('scores')}
@@ -277,7 +286,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <BookOpen className="w-5 h-5 transition-transform duration-200" />
               <span className="text-[10px] mt-1 tracking-tight">Ikut</span>
             </button>
-
+          </>
+        ) : isEgi ? (
+          <>
             <button
               ref={(el) => { buttonRefs.current['modules'] = el; }}
               onClick={() => setActiveTab('modules')}
@@ -286,9 +297,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <BookOpen className="w-5 h-5 transition-transform duration-200" />
               <span className="text-[10px] mt-1 tracking-tight">Modul</span>
             </button>
-          </>
-        ) : isEgi ? (
-          <>
             <button
               ref={(el) => { buttonRefs.current['scores'] = el; }}
               onClick={() => setActiveTab('scores')}
@@ -296,14 +304,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             >
               <Award className="w-5 h-5 transition-transform duration-200" />
               <span className="text-[10px] mt-1 tracking-tight">Nilai</span>
-            </button>
-            <button
-              ref={(el) => { buttonRefs.current['modules'] = el; }}
-              onClick={() => setActiveTab('modules')}
-              className={getButtonClass('modules')}
-            >
-              <BookOpen className="w-5 h-5 transition-transform duration-200" />
-              <span className="text-[10px] mt-1 tracking-tight">Modul</span>
             </button>
           </>
         ) : (

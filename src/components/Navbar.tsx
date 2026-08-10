@@ -104,6 +104,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span>Paket Ujian</span>
                   </button>
                   <button
+                    onClick={() => setActiveTab('modules')}
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      activeTab === 'modules'
+                        ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-950/50'
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Modul Pembelajaran</span>
+                  </button>
+                  <button
                     onClick={() => setActiveTab('scores')}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                       activeTab === 'scores'
@@ -125,6 +136,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <BookOpen className="w-4 h-4" />
                     <span>Ikuti Ujian</span>
                   </button>
+                </>
+              ) : currentUser.role === 'egi' ? (
+                <>
                   <button
                     onClick={() => setActiveTab('modules')}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -136,9 +150,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <BookOpen className="w-4 h-4" />
                     <span>Modul Pembelajaran</span>
                   </button>
-                </>
-              ) : currentUser.role === 'egi' ? (
-                <>
                   <button
                     onClick={() => setActiveTab('scores')}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -149,17 +160,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <Award className="w-4 h-4" />
                     <span>Laporan Nilai</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('modules')}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                      activeTab === 'modules'
-                        ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-300 shadow-sm'
-                        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-950/50'
-                    }`}
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    <span>Modul Pembelajaran</span>
                   </button>
                 </>
               ) : (
