@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 import { 
   LayoutDashboard, 
@@ -6,7 +6,16 @@ import {
   Award, 
   History
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  motion, 
+  AnimatePresence, 
+  useMotionValue, 
+  useTransform, 
+  useSpring,
+  useVelocity,
+  animate,
+  PanInfo
+} from 'framer-motion';
 import { useLiquidGlassNavigation } from '../hooks/useLiquidGlassNavigation';
 
 interface MobileBottomNavProps {
@@ -26,6 +35,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const isCompact = navState === 'compact';
 
   const [isSystemDark, setIsSystemDark] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   const isAdmin = currentUser?.role === 'admin';
   const isEgi = currentUser?.role === 'egi';
@@ -93,12 +104,78 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     }
   };
 
+  // --- PHYSICS & INTERACTION LOGIC ---
+
+  const x = useMotionValue(0);
+  const width = useMotionValue(0);
+  const xVelocity = useVelocity(x);
+  
+  // Smooth velocity for stable scaling
+  const smoothVelocity = useSpring(xVelocity, { stiffness: 400, damping: 50 });
+  
+  // Liquid stretch based on velocity
+  const scaleX = useTransform(smoothVelocity, [-1500, 0, 1500], [1.35, 1, 1.35]);
+
+  // Specular highlight shift (parallax effect inside the bubble)
+  const highlightX = useTransform(x, [0, 300], ['-30%', '130%']);
+
+  // Move the bubble to the currently active tab
+  const snapToActive = () => {
+    const activeEl = buttonRefs.current[effectiveActiveTab];
+    if (activeEl && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      const localX = elRect.left - containerRect.left;
+      
+      animate(x, localX, { type: 'spring', stiffness: 350, damping: 30, mass: 0.8 });
+      animate(width, elRect.width, { type: 'spring', stiffness: 350, damping: 30, mass: 0.8 });
+    }
+  };
+
+  // Snap to active element on mount and when dependencies change
+  useEffect(() => {
+    // Slight delay to ensure layout is calculated, especially when compact state changes
+    const timer = setTimeout(() => {
+      snapToActive();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [effectiveActiveTab, isCompact, tabKeys.length]);
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    if (!containerRef.current) return;
+    
+    const currentAbsoluteX = containerRef.current.getBoundingClientRect().left + x.get() + width.get() / 2;
+    let closestKey = effectiveActiveTab;
+    let minDistance = Infinity;
+
+    tabKeys.forEach(key => {
+      const el = buttonRefs.current[key];
+      if (el) {
+        const elRect = el.getBoundingClientRect();
+        const center = elRect.left + elRect.width / 2;
+        const dist = Math.abs(currentAbsoluteX - center);
+        
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestKey = key;
+        }
+      }
+    });
+
+    if (closestKey !== effectiveActiveTab) {
+      setActiveTab(closestKey); // The useEffect will handle snapping
+    } else {
+      snapToActive(); // Snap back to current if it hasn't changed
+    }
+  };
+
   return (
     <div 
       className="md:hidden fixed z-50 left-0 right-0 flex justify-center pointer-events-none" 
       style={{ bottom: 'max(12px, env(safe-area-inset-bottom))' }}
     >
       <motion.div
+        ref={containerRef}
         layout
         initial={false}
         animate={{
@@ -117,15 +194,50 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           pointer-events-auto
           relative flex items-center justify-between
           overflow-hidden
-          backdrop-blur-2xl saturate-[1.8]
-          bg-white/50 dark:bg-[#151515]/75
-          border border-white/50 dark:border-white/10
-          shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),inset_0_-1px_1px_rgba(0,0,0,0.05),0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.04)]
-          dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3),0_12px_40px_rgba(0,0,0,0.4),0_2px_12px_rgba(0,0,0,0.2)]
+          backdrop-blur-[24px] saturate-[2]
+          bg-white/40 dark:bg-[#121212]/50
+          border border-white/60 dark:border-white/10
+          shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),inset_0_-1px_1px_rgba(0,0,0,0.05),0_12px_40px_rgba(0,0,0,0.1),0_4px_12px_rgba(0,0,0,0.05)]
+          dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3),0_12px_40px_rgba(0,0,0,0.6),0_4px_12px_rgba(0,0,0,0.3)]
         `}
       >
         {/* Top Edge Highlight for Thickness Impression */}
-        <div className="absolute inset-0 rounded-[inherit] border-t-[1.5px] border-white/70 dark:border-white/15 pointer-events-none" />
+        <div className="absolute inset-0 rounded-[inherit] border-t-[1.5px] border-white/80 dark:border-white/15 pointer-events-none" />
+
+        {/* The Draggable Liquid Bubble */}
+        <motion.div
+          drag="x"
+          dragConstraints={containerRef}
+          dragElastic={0.15}
+          dragDirectionLock // Prevents bubble drag from interrupting vertical scroll
+          onDragEnd={handleDragEnd}
+          style={{
+            x,
+            width,
+            scaleX,
+            position: 'absolute',
+            top: isCompact ? '6px' : '10px',
+            bottom: isCompact ? '6px' : '10px',
+            borderRadius: 999,
+          }}
+          className={`
+            z-0 cursor-grab active:cursor-grabbing
+            bg-black/90 dark:bg-white/15
+            shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_2px_12px_rgba(0,0,0,0.2)]
+            dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_12px_rgba(0,0,0,0.3)]
+          `}
+        >
+          {/* Specular Highlight inside Bubble */}
+          <motion.div 
+            className="absolute inset-0 rounded-full pointer-events-none opacity-50 dark:opacity-30"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+              backgroundPosition: highlightX,
+              backgroundSize: '200% 100%',
+              backgroundRepeat: 'no-repeat'
+            }}
+          />
+        </motion.div>
 
         {tabKeys.map((key) => {
           const isActive = effectiveActiveTab === key;
@@ -133,20 +245,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           return (
             <motion.button
               key={key}
+              ref={(el) => { buttonRefs.current[key] = el; }}
               layout="position"
               onClick={() => setActiveTab(key)}
-              className="relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-90"
+              className="relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95"
               style={{ flex: 1, minHeight: 44 }}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="liquidActiveIndicator"
-                  className="absolute inset-0 rounded-full z-0 bg-black/80 dark:bg-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_2px_8px_rgba(0,0,0,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 400, damping: 32, mass: 0.9 }}
-                />
-              )}
-              
               <motion.div layout="position" className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
                 {getTabIcon(key, isActive)}
                 
