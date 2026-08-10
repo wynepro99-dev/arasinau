@@ -39,7 +39,7 @@ const NavButton = ({
   setRef,
   onClick,
   onPointerDown,
-  localCenter
+  buttonCenters
 }: {
   itemKey: string;
   isActive: boolean;
