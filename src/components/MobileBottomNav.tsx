@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User } from '../types';
 import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Award, 
-  History
+  Grid2x2, 
+  FileEdit, 
+  Library, 
+  Trophy, 
+  Clock
 } from 'lucide-react';
 import { 
   motion, 
@@ -15,7 +16,8 @@ import {
   useVelocity,
   animate,
   PanInfo,
-  useDragControls
+  useDragControls,
+  MotionValue
 } from 'framer-motion';
 import { useLiquidGlassNavigation } from '../hooks/useLiquidGlassNavigation';
 
@@ -25,6 +27,81 @@ interface MobileBottomNavProps {
   setActiveTab: (tab: string) => void;
   isTakingExam: boolean;
 }
+
+const NavButton = ({
+  itemKey,
+  isActive,
+  isCompact,
+  label,
+  icon,
+  x,
+  width,
+  setRef,
+  onClick,
+  onPointerDown,
+  localCenter
+}: {
+  itemKey: string;
+  isActive: boolean;
+  isCompact: boolean;
+  label: string;
+  icon: React.ReactNode;
+  x: MotionValue<number>;
+  width: MotionValue<number>;
+  setRef: (el: HTMLButtonElement | null) => void;
+  onClick: () => void;
+  onPointerDown: (e: any) => void;
+  localCenter: number;
+}) => {
+  const localCenterRef = useRef(localCenter);
+  
+  useEffect(() => {
+    localCenterRef.current = localCenter;
+  }, [localCenter]);
+
+  // Magnifying Glass Physics
+  const scale = useTransform(x, (latestX: number) => {
+    const center = localCenterRef.current;
+    if (!center) return 1;
+    const bubbleCenter = latestX + width.get() / 2;
+    const distance = Math.abs(bubbleCenter - center);
+    
+    // Magnify up to 1.3x when bubble is exactly over the icon
+    if (distance > 60) return 1;
+    return 1 + (0.3 * (1 - distance / 60));
+  });
+
+  return (
+    <motion.button
+      ref={setRef}
+      layout="position"
+      onPointerDown={onPointerDown}
+      onClick={onClick}
+      className={`relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95 ${isActive ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+      style={{ touchAction: isActive ? 'none' : 'auto', flex: 1, minHeight: 44 }}
+    >
+      <motion.div layout="position" style={{ scale }} className="relative z-10 flex flex-col items-center justify-center pointer-events-none origin-bottom">
+        {icon}
+        
+        <AnimatePresence>
+          {!isCompact && (
+            <motion.span
+              initial={{ opacity: 0, height: 0, scale: 0.8 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.8 }}
+              transition={{ duration: 0.15, ease: "easeInOut" }}
+              className={`text-[10px] font-semibold tracking-tight mt-1 truncate max-w-[64px] px-1 ${
+                isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
+              }`}
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.button>
+  );
+};
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentUser,
@@ -38,6 +115,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const [isSystemDark, setIsSystemDark] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [buttonCenters, setButtonCenters] = useState<Record<string, number>>({});
 
   const isAdmin = currentUser?.role === 'admin';
   const isEgi = currentUser?.role === 'egi';
@@ -53,7 +131,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, []);
 
-  // Early return moved to bottom to prevent React Hook errors
   // Configuration of tabs based on role
   let tabKeys: string[] = [];
   if (isAdmin) {
@@ -88,19 +165,21 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   const getTabIcon = (key: string, isActive: boolean) => {
     const iconProps = { 
-      className: `w-[22px] h-[22px] transition-colors duration-300 ${
+      className: `w-[24px] h-[24px] transition-all duration-300 ${
         isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
-      }` 
+      }`,
+      fill: isActive ? 'currentColor' : 'none',
+      strokeWidth: isActive ? 2 : 1.75
     };
     switch (key) {
-      case 'dashboard': return <LayoutDashboard {...iconProps} />;
-      case 'employee_history': return <History {...iconProps} />;
-      case 'scores': return <Award {...iconProps} />;
+      case 'dashboard': return <Grid2x2 {...iconProps} />;
+      case 'employee_history': return <Clock {...iconProps} />;
+      case 'scores': return <Trophy {...iconProps} />;
       case 'exams':
+      case 'employee_dashboard': return <FileEdit {...iconProps} />;
       case 'modules':
-      case 'employee_dashboard':
       default:
-        return <BookOpen {...iconProps} />;
+        return <Library {...iconProps} />;
     }
   };
 
@@ -120,6 +199,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   // Specular highlight shift (parallax effect inside the bubble)
   const highlightX = useTransform(x, [0, 300], ['-30%', '130%']);
 
+  const calculateCenters = () => {
+    if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const newCenters: Record<string, number> = {};
+    tabKeys.forEach(k => {
+      const el = buttonRefs.current[k];
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        newCenters[k] = (rect.left - containerRect.left) + rect.width / 2;
+      }
+    });
+    setButtonCenters(newCenters);
+  };
+
   // Move the bubble to the currently active tab
   const snapToActive = () => {
     const activeEl = buttonRefs.current[effectiveActiveTab];
@@ -136,11 +229,20 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   // Snap to active element on mount and layout changes
   useEffect(() => {
     let rafId: number;
-    // Use requestAnimationFrame instead of setTimeout to avoid lag and snapping teleportation
-    rafId = requestAnimationFrame(() => {
-      snapToActive();
-    });
-    return () => cancelAnimationFrame(rafId);
+    let timeoutId: NodeJS.Timeout;
+    
+    // Slight delay is crucial for initial mount layout calculation so it hits the precise icon
+    timeoutId = setTimeout(() => {
+      calculateCenters();
+      rafId = requestAnimationFrame(() => {
+        snapToActive();
+      });
+    }, 50);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [effectiveActiveTab, isCompact, tabKeys.length]);
 
   const handleDragEnd = (event: any, info: PanInfo) => {
@@ -172,7 +274,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       const activeEl = buttonRefs.current[closestKey];
       if (activeEl) {
         const elRect = activeEl.getBoundingClientRect();
-        const localX = elRect.left - containerRef.current.getBoundingClientRect().left;
+        const localX = elRect.left - containerRect.left;
         animate(x, localX, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
         animate(width, elRect.width, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
       }
@@ -182,6 +284,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     }
   };
 
+  // Early return moved to bottom to prevent React Hook errors
   if (!currentUser || isTakingExam) return null;
 
   return (
@@ -261,43 +364,24 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           />
         </motion.div>
 
-        {tabKeys.map((key) => {
-          const isActive = effectiveActiveTab === key;
-          
-          return (
-            <motion.button
-              key={key}
-              ref={(el) => { buttonRefs.current[key] = el; }}
-              layout="position"
-              onPointerDown={(e) => {
-                if (isActive) dragControls.start(e);
-              }}
-              onClick={() => setActiveTab(key)}
-              className={`relative flex flex-col items-center justify-center rounded-full z-10 transition-transform active:scale-95 ${isActive ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
-              style={{ touchAction: isActive ? 'none' : 'auto', flex: 1, minHeight: 44 }}
-            >
-              <motion.div layout="position" className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
-                {getTabIcon(key, isActive)}
-                
-                <AnimatePresence>
-                  {!isCompact && (
-                    <motion.span
-                      initial={{ opacity: 0, height: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                      exit={{ opacity: 0, height: 0, scale: 0.8 }}
-                      transition={{ duration: 0.15, ease: "easeInOut" }}
-                      className={`text-[10px] font-semibold tracking-tight mt-1 truncate max-w-[64px] px-1 ${
-                        isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
-                      }`}
-                    >
-                      {getTabLabel(key)}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </motion.button>
-          );
-        })}
+        {tabKeys.map((key) => (
+          <NavButton
+            key={key}
+            itemKey={key}
+            isActive={effectiveActiveTab === key}
+            isCompact={isCompact}
+            label={getTabLabel(key)}
+            icon={getTabIcon(key, effectiveActiveTab === key)}
+            x={x}
+            width={width}
+            setRef={(el: HTMLButtonElement | null) => { buttonRefs.current[key] = el; }}
+            onClick={() => setActiveTab(key)}
+            onPointerDown={(e: any) => {
+              if (effectiveActiveTab === key) dragControls.start(e);
+            }}
+            localCenter={buttonCenters[key] || 0}
+          />
+        ))}
       </motion.div>
     </div>
   );
