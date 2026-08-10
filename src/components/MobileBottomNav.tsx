@@ -114,8 +114,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   // Smooth velocity for stable scaling
   const smoothVelocity = useSpring(xVelocity, { stiffness: 400, damping: 50 });
   
-  // Liquid stretch based on velocity
-  const scaleX = useTransform(smoothVelocity, [-1500, 0, 1500], [1.35, 1, 1.35]);
+  // Liquid stretch based on velocity (subtle deformation)
+  const scaleX = useTransform(smoothVelocity, [-1500, 0, 1500], [1.15, 1, 1.15]);
 
   // Specular highlight shift (parallax effect inside the bubble)
   const highlightX = useTransform(x, [0, 300], ['-30%', '130%']);
@@ -128,18 +128,19 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       const elRect = activeEl.getBoundingClientRect();
       const localX = elRect.left - containerRect.left;
       
-      animate(x, localX, { type: 'spring', stiffness: 350, damping: 30, mass: 0.8 });
-      animate(width, elRect.width, { type: 'spring', stiffness: 350, damping: 30, mass: 0.8 });
+      animate(x, localX, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+      animate(width, elRect.width, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
     }
   };
 
-  // Snap to active element on mount and when dependencies change
+  // Snap to active element on mount and layout changes
   useEffect(() => {
-    // Slight delay to ensure layout is calculated, especially when compact state changes
-    const timer = setTimeout(() => {
+    let rafId: number;
+    // Use requestAnimationFrame instead of setTimeout to avoid lag and snapping teleportation
+    rafId = requestAnimationFrame(() => {
       snapToActive();
-    }, 50);
-    return () => clearTimeout(timer);
+    });
+    return () => cancelAnimationFrame(rafId);
   }, [effectiveActiveTab, isCompact, tabKeys.length]);
 
   const handleDragEnd = (event: any, info: PanInfo) => {
@@ -164,7 +165,15 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     });
 
     if (closestKey !== effectiveActiveTab) {
-      setActiveTab(closestKey); // The useEffect will handle snapping
+      // Snap IMMEDIATELY visually before react state update lag
+      const activeEl = buttonRefs.current[closestKey];
+      if (activeEl) {
+        const elRect = activeEl.getBoundingClientRect();
+        const localX = elRect.left - containerRef.current.getBoundingClientRect().left;
+        animate(x, localX, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+        animate(width, elRect.width, { type: 'spring', stiffness: 500, damping: 30, mass: 0.8 });
+      }
+      setActiveTab(closestKey);
     } else {
       snapToActive(); // Snap back to current if it hasn't changed
     }
@@ -227,9 +236,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           }}
           className={`
             z-0 pointer-events-none
-            bg-white/90 dark:bg-white/15
-            shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_4px_12px_rgba(0,0,0,0.08)]
-            dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_12px_rgba(0,0,0,0.3)]
+            backdrop-blur-md saturate-150
+            bg-white/20 dark:bg-[#2A2A2A]/40
+            border border-white/50 dark:border-white/10
+            shadow-[inset_0_1px_2px_rgba(255,255,255,0.8),0_4px_12px_rgba(0,0,0,0.05)]
+            dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.3)]
           `}
         >
           {/* Specular Highlight inside Bubble */}
