@@ -25,6 +25,14 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      setAvatar(currentUser.avatar || '');
+      setPassword('');
+      setConfirmPassword('');
+    }
+  }, [isOpen, currentUser.avatar]);
+
   if (!isOpen) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

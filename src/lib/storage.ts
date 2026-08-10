@@ -415,7 +415,15 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
     throw new Error('User tidak ditemukan.');
   }
 
-  const updated = { ...memoryUsers[idx], ...updates };
+  const updated = { ...memoryUsers[idx] };
+  if (updates.name !== undefined) updated.name = updates.name;
+  if (updates.email !== undefined) updated.email = updates.email;
+  if (updates.password !== undefined) updated.password = updates.password;
+  if (updates.role !== undefined) updated.role = updates.role;
+  if (updates.department !== undefined) updated.department = updates.department;
+  if (updates.avatar !== undefined) updated.avatar = updates.avatar;
+  if (updates.company !== undefined) updated.company = updates.company;
+
   memoryUsers[idx] = updated;
 
   // If this is the current logged-in user, sync the current user state
