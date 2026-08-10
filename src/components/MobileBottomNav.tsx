@@ -51,17 +51,11 @@ const NavButton = ({
   setRef: (el: HTMLButtonElement | null) => void;
   onClick: () => void;
   onPointerDown: (e: any) => void;
-  localCenter: number;
+  buttonCenters: React.MutableRefObject<Record<string, number>>;
 }) => {
-  const localCenterRef = useRef(localCenter);
-  
-  useEffect(() => {
-    localCenterRef.current = localCenter;
-  }, [localCenter]);
-
   // Magnifying Glass Physics
   const scale = useTransform(x, (latestX: number) => {
-    const center = localCenterRef.current;
+    const center = buttonCenters.current[itemKey];
     if (!center) return 1;
     const bubbleCenter = latestX + width.get() / 2;
     const distance = Math.abs(bubbleCenter - center);
@@ -117,7 +111,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const [isSystemDark, setIsSystemDark] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [buttonCenters, setButtonCenters] = useState<Record<string, number>>({});
+  const buttonCenters = useRef<Record<string, number>>({});
 
   const isAdmin = currentUser?.role === 'admin';
   const isEgi = currentUser?.role === 'egi';
@@ -204,15 +198,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const calculateCenters = () => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
-    const newCenters: Record<string, number> = {};
     tabKeys.forEach(k => {
       const el = buttonRefs.current[k];
       if (el) {
         const rect = el.getBoundingClientRect();
-        newCenters[k] = (rect.left - containerRect.left) + rect.width / 2;
+        buttonCenters.current[k] = (rect.left - containerRect.left) + rect.width / 2;
       }
     });
-    setButtonCenters(newCenters);
   };
 
   // Move the bubble to the currently active tab
@@ -393,7 +385,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             onPointerDown={(e: any) => {
               if (effectiveActiveTab === key) dragControls.start(e);
             }}
-            localCenter={buttonCenters[key] || 0}
+            buttonCenters={buttonCenters}
           />
         ))}
       </motion.div>
