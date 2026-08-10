@@ -109,7 +109,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       }`;
     }
 
-    return `relative z-10 flex flex-col items-center justify-center pt-3 pb-2 px-1 sm:px-3 flex-1 rounded-full transition-all duration-250 active:scale-90 select-none text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold`;
+    return `relative z-10 flex flex-col items-center justify-center pt-2.5 pb-1.5 px-1 sm:px-2 flex-1 rounded-full transition-all duration-250 active:scale-95 select-none text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 font-semibold`;
   };
 
   useEffect(() => {
@@ -194,11 +194,14 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   const colors = getGlowColors(activeTab);
   const containerWidth = containerRef.current?.offsetWidth || 0;
-  
+  const baseWidth = indicatorStyle.width;
+  // Expand when dragging, shrink when resting
+  const currentWidth = isDragging ? baseWidth * 1.25 : baseWidth * 0.85;
+
   // Realtime indicator left style based on dragging gesture
   const currentLeft = isDragging
-    ? Math.max(0, Math.min(dragX - indicatorStyle.width / 2, containerWidth - indicatorStyle.width))
-    : indicatorStyle.left;
+    ? Math.max(0, Math.min(dragX - currentWidth / 2, containerWidth - currentWidth))
+    : indicatorStyle.left + (baseWidth - currentWidth) / 2;
 
   return (
     <div className="md:hidden fixed bottom-5 left-4 right-4 z-40 bg-white/70 dark:bg-black/95 backdrop-blur-xl border border-slate-200/50 dark:border-zinc-800 rounded-full shadow-[0_12px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] px-3 py-1.5 animate-slide-up">
@@ -221,9 +224,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           }`}
           style={{
             left: currentLeft,
-            width: indicatorStyle.width,
-            top: '2px',
-            bottom: '2px',
+            width: currentWidth,
+            top: '4px',
+            bottom: '4px',
             backgroundColor: isSystemDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.45)',
             backdropFilter: 'blur(20px)',
             border: isSystemDark ? '1px solid rgba(255, 255, 255, 0.08)' : `1px solid ${colors.borderGlow}`,
