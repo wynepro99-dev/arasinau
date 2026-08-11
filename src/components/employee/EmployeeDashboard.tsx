@@ -10,7 +10,8 @@ import {
   Tag, 
   AlertCircle,
   RotateCcw,
-  Lock
+  Lock,
+  ChevronDown
 } from 'lucide-react';
 
 interface EmployeeDashboardProps {
@@ -33,6 +34,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
   activeTab
 }) => {
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showArchived, setShowArchived] = useState(false);
 
   // Filter attempts for this current employee
   const myAttempts = attempts.filter(a => a.userId === currentUser.id);
@@ -124,8 +126,9 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             </select>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {filteredExams.map((exam) => {
+          {/* Helper Function to Render Exam Card */}
+          {(() => {
+            const renderExamRow = (exam: ExamPackage) => {
               const examQCount = questions.filter(q => q.examId === exam.id).length;
               const prevAttempt = myAttempts.find(a => a.examId === exam.id);
               const isClosed = exam.status === 'closed';
@@ -135,7 +138,6 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                   key={exam.id}
                   className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all group shadow-sm hover:shadow-md"
                 >
-                  {/* Bagian Kiri: Info Ujian */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 rounded-lg border border-indigo-100/60 dark:border-indigo-900/40 flex items-center space-x-1 shrink-0">
@@ -167,7 +169,6 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                     </p>
                   </div>
 
-                  {/* Bagian Tengah: Statistik */}
                   <div className="flex items-center gap-4 sm:gap-6 shrink-0 sm:px-5 sm:border-l border-slate-100 dark:border-zinc-800">
                     <div className="text-center sm:text-left">
                       <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Durasi</div>
@@ -183,7 +184,6 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                     </div>
                   </div>
 
-                  {/* Bagian Kanan: Tombol Aksi */}
                   <div className="shrink-0 sm:w-36">
                     <button
                       onClick={() => onStartExam(exam)}
@@ -218,11 +218,44 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                       )}
                     </button>
                   </div>
-
                 </div>
               );
-            })}
-          </div>
+            };
+
+            const activeExams = filteredExams.filter(e => e.status === 'active' && !myAttempts.find(a => a.examId === e.id));
+            const archivedExams = filteredExams.filter(e => e.status === 'closed' || !!myAttempts.find(a => a.examId === e.id));
+
+            return (
+              <>
+                <div className="flex flex-col gap-3">
+                  {activeExams.length > 0 ? (
+                    activeExams.map(renderExamRow)
+                  ) : (
+                    <div className="py-10 text-center bg-slate-50/50 dark:bg-zinc-900/30 rounded-2xl border-2 border-dashed border-slate-200 dark:border-zinc-800">
+                      <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium">Tidak ada ujian baru yang tersedia saat ini.</p>
+                    </div>
+                  )}
+                </div>
+
+                {archivedExams.length > 0 && (
+                  <div className="mt-8">
+                    <button 
+                      onClick={() => setShowArchived(!showArchived)}
+                      className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-700 dark:text-zinc-300 font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      <span>Lihat Ujian yang Selesai & Ditutup ({archivedExams.length})</span>
+                      <ChevronDown className={`w-5 h-5 transition-transform ${showArchived ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showArchived && (
+                      <div className="flex flex-col gap-3 mt-3">
+                        {archivedExams.map(renderExamRow)}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 
