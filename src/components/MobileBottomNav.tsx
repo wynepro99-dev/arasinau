@@ -87,7 +87,7 @@ const NavButton = ({
               exit={{ opacity: 0, height: 0, scale: 0.8 }}
               transition={{ duration: 0.15, ease: "easeInOut" }}
               className={`text-[10px] font-semibold tracking-tight mt-1 truncate max-w-[64px] px-1 ${
-                isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
+                isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-zinc-400'
               }`}
             >
               {label}
@@ -162,7 +162,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   const getTabIcon = (key: string, isActive: boolean) => {
     const iconProps = { 
       className: `w-[24px] h-[24px] transition-all duration-300 ${
-        isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-zinc-400'
+        isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-zinc-400'
       }`,
       fill: isActive ? 'currentColor' : 'none',
       strokeWidth: isActive ? 2 : 1.75

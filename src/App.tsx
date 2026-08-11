@@ -34,7 +34,7 @@ export default function App() {
       const user = getCurrentUser();
       if (user) {
         if (user.role === 'karyawan') return 'employee_dashboard';
-        if (user.role === 'egi') return 'scores';
+        if (user.role === 'egi') return 'employee_dashboard';
         try {
           const savedTab = localStorage.getItem('ara_active_tab');
           return savedTab || 'dashboard';
@@ -204,7 +204,7 @@ export default function App() {
       if (user.role === 'admin') {
         setActiveTab('dashboard');
       } else if (user.role === 'egi') {
-        setActiveTab('scores');
+        setActiveTab('employee_dashboard');
       } else {
         setActiveTab('employee_dashboard');
       }
