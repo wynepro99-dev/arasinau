@@ -651,7 +651,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                         )}
 
                         {/* AI Grading & Feedback / Manual Adjustment */}
-                        <div className="p-3 bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-100/30 dark:border-indigo-500/30 rounded-lg text-xs space-y-3">
+                        <div className="p-3 bg-slate-100 dark:bg-indigo-950/30 border border-slate-200 dark:border-indigo-500/30 rounded-lg text-xs space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-indigo-700 dark:text-indigo-300 font-bold flex items-center gap-1.5">
                               <FileCheck className="w-3.5 h-3.5" />
@@ -659,7 +659,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                             </span>
                             
                             <div className="flex items-center space-x-1">
-                              <span className="text-[10px] text-slate-400 dark:text-indigo-300 font-medium">Skor:</span>
+                              <span className="text-[10px] text-slate-700 dark:text-indigo-300 font-bold">Skor:</span>
                               {isEssay ? (
                                 <div className="flex items-center space-x-1">
                                   <input
@@ -668,12 +668,12 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                                     max={maxPts}
                                     value={essayGrades[qId]?.pointsEarned ?? ans.pointsEarned ?? 0}
                                     onChange={(e) => handleGradeChange(qId, 'pointsEarned', Number(e.target.value))}
-                                    className="w-12 text-center py-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/50 rounded font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                                    className="w-12 text-center py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-indigo-500/50 rounded font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
                                   />
-                                  <span className="text-slate-400 dark:text-indigo-200">/ {maxPts}</span>
+                                  <span className="text-slate-700 dark:text-indigo-200 font-bold">/ {maxPts}</span>
                                 </div>
                               ) : (
-                                <span className="font-extrabold text-slate-800 dark:text-white">
+                                <span className="font-extrabold text-slate-900 dark:text-white">
                                   {ans.pointsEarned} / {maxPts}
                                 </span>
                               )}
@@ -681,14 +681,14 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[10px] text-slate-500 dark:text-indigo-200 font-bold block mb-1">Catatan / Umpan Balik Evaluator (Admin):</span>
+                            <span className="text-[11px] text-slate-800 dark:text-indigo-200 font-black block mb-1">Catatan / Umpan Balik Evaluator (Admin):</span>
                             {isEssay ? (
                               <textarea
                                 rows={2}
                                 value={essayGrades[qId]?.feedback ?? ans.aiFeedback ?? ''}
                                 onChange={(e) => handleGradeChange(qId, 'feedback', e.target.value)}
                                 placeholder="Tulis umpan balik guru atau nilai revisi di sini..."
-                                className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/50 rounded-lg text-[11px] text-slate-800 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                                className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-indigo-500/50 rounded-lg text-[11px] text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 transition-colors"
                               />
                             ) : (
                               <p className="text-slate-600 dark:text-indigo-200 italic">
