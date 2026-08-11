@@ -124,7 +124,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="flex flex-col gap-3">
             {filteredExams.map((exam) => {
               const examQCount = questions.filter(q => q.examId === exam.id).length;
               const prevAttempt = myAttempts.find(a => a.examId === exam.id);
@@ -133,92 +133,87 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               return (
                 <div
                   key={exam.id}
-                  className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-350 dark:hover:border-zinc-700 rounded-2xl p-5 flex flex-col justify-between transition-all group shadow-sm shadow-slate-100/50 dark:shadow-none hover:shadow-md relative"
+                  className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all group shadow-sm hover:shadow-md"
                 >
-                  <div>
-                    {/* Category & Pass Grade badge */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-semibold bg-slate-50 dark:bg-zinc-950 text-slate-600 dark:text-zinc-400 rounded-lg border border-slate-200/60 dark:border-zinc-800 flex items-center space-x-1 whitespace-nowrap shrink-0">
-                        <Tag className="w-3 h-3 text-indigo-500 dark:text-indigo-400" />
+                  {/* Bagian Kiri: Info Ujian */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 rounded-lg border border-indigo-100/60 dark:border-indigo-900/40 flex items-center space-x-1 shrink-0">
+                        <Tag className="w-3 h-3" />
                         <span>{exam.category}</span>
                       </span>
-
-                      <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-1.5 min-w-0">
-                        {isClosed && (
-                          <span className="px-1.5 py-0.5 sm:px-2 text-[9px] sm:text-[10px] font-bold rounded uppercase tracking-wider bg-rose-500/10 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 flex items-center space-x-1 whitespace-nowrap">
-                            <Lock className="w-3 h-3" />
-                            <span>Sesi Ditutup</span>
-                          </span>
-                        )}
-
-                        {prevAttempt && (
-                          <span className={`px-1.5 py-0.5 sm:px-2 text-[9px] sm:text-[10px] font-bold rounded uppercase tracking-wider flex items-center space-x-1 whitespace-nowrap ${
-                            prevAttempt.passed
-                              ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
-                              : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
-                          }`}>
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>Pernah Tes ({prevAttempt.score} pts)</span>
-                          </span>
-                        )}
-                      </div>
+                      {isClosed && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase bg-rose-50/80 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 flex items-center space-x-1 shrink-0">
+                          <Lock className="w-3 h-3" />
+                          <span>Sesi Ditutup</span>
+                        </span>
+                      )}
+                      {prevAttempt && (
+                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase flex items-center space-x-1 shrink-0 ${
+                          prevAttempt.passed
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
+                            : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
+                        }`}>
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Pernah Tes ({prevAttempt.score} pts)</span>
+                        </span>
+                      )}
                     </div>
-
-                     <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                       {exam.title}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-2 leading-relaxed">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 truncate mt-0.5">
                       {exam.description}
                     </p>
+                  </div>
 
-                    {/* Metadata Specs */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-3 gap-2 text-center text-[11px]">
-                      <div className="bg-slate-50/60 dark:bg-zinc-950/60 p-2 rounded-xl">
-                        <div className="text-slate-400 dark:text-zinc-500 font-medium">Durasi</div>
-                        <div className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{exam.durationMinutes} mnt</div>
-                      </div>
-                      <div className="bg-slate-50/60 dark:bg-zinc-950/60 p-2 rounded-xl">
-                        <div className="text-slate-400 dark:text-zinc-500 font-medium">Jumlah Soal</div>
-                        <div className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{examQCount} soal</div>
-                      </div>
-                      <div className="bg-slate-50/60 dark:bg-zinc-950/60 p-2 rounded-xl">
-                        <div className="text-slate-400 dark:text-zinc-500 font-medium">Min. Lulus</div>
-                        <div className="font-extrabold text-slate-800 dark:text-slate-200 mt-0.5">{exam.passingScore}%</div>
-                      </div>
+                  {/* Bagian Tengah: Statistik */}
+                  <div className="flex items-center gap-4 sm:gap-6 shrink-0 sm:px-5 sm:border-l border-slate-100 dark:border-zinc-800">
+                    <div className="text-center sm:text-left">
+                      <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Durasi</div>
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{exam.durationMinutes}m</div>
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Soal</div>
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{examQCount}</div>
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">Lulus</div>
+                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{exam.passingScore}%</div>
                     </div>
                   </div>
 
-                  {/* Start Button */}
-                  <div className="mt-5 pt-3 border-t border-slate-100 dark:border-zinc-800">
+                  {/* Bagian Kanan: Tombol Aksi */}
+                  <div className="shrink-0 sm:w-36">
                     <button
                       onClick={() => onStartExam(exam)}
                       disabled={examQCount === 0 || isClosed || !!prevAttempt}
-                      className={`w-full py-2.5 px-4 font-bold text-xs rounded-xl transition-all flex items-center justify-center space-x-2 ${
+                      className={`w-full py-2.5 px-3 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 ${
                         isClosed
-                          ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 cursor-not-allowed'
+                          ? 'bg-slate-50 dark:bg-zinc-950 text-slate-400 dark:text-zinc-600 border border-slate-200 dark:border-zinc-800 cursor-not-allowed'
                           : examQCount === 0
-                          ? 'bg-slate-200 dark:bg-zinc-950 text-slate-400 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 cursor-not-allowed'
+                          ? 'bg-slate-100 dark:bg-zinc-900 text-slate-400 border border-slate-200 dark:border-zinc-800 cursor-not-allowed'
                           : prevAttempt
-                          ? 'bg-emerald-55 border border-emerald-200/50 text-emerald-600 dark:text-emerald-400 cursor-not-allowed opacity-90'
-                          : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/10 dark:shadow-none active:scale-98'
+                          ? 'bg-emerald-50 dark:bg-zinc-950 border border-emerald-200/50 dark:border-zinc-800 text-emerald-600 dark:text-emerald-500 cursor-not-allowed'
+                          : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm hover:shadow active:scale-95'
                       }`}
                     >
                       {isClosed ? (
                         <>
-                          <Lock className="w-4 h-4 text-rose-400" />
-                          <span>Sesi Ujian Ditutup oleh Admin</span>
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>Ditutup</span>
                         </>
                       ) : examQCount === 0 ? (
-                        <span>Soal Belum Tersedia</span>
+                        <span>Belum Siap</span>
                       ) : prevAttempt ? (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                          <span>Sudah Dikerjakan ({prevAttempt.score} Poin)</span>
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Selesai</span>
                         </>
                       ) : (
                         <>
-                          <Play className="w-4 h-4 fill-current" />
-                          <span>Mulai Ujian Sekarang</span>
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Kerjakan</span>
                         </>
                       )}
                     </button>
