@@ -488,17 +488,28 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                   </td>
 
                   <td className="px-5 py-3.5">
-                    {att.passed ? (
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-transparent dark:border-emerald-900/40">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>LULUS</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-transparent dark:border-rose-900/40">
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>TIDAK LULUS</span>
-                      </span>
-                    )}
+                    {(() => {
+                      const isPendingGrading = Object.values(att.answers || {}).some(a => a.aiFeedback === 'Menunggu penilaian manual dari Admin.');
+                      if (isPendingGrading) {
+                        return (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border border-transparent dark:border-amber-900/40">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>MENUNGGU PENILAIAN</span>
+                          </span>
+                        );
+                      }
+                      return att.passed ? (
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-transparent dark:border-emerald-900/40">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>LULUS</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border border-transparent dark:border-rose-900/40">
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>TIDAK LULUS</span>
+                        </span>
+                      );
+                    })()}
                   </td>
 
                   <td className="px-5 py-3.5 text-slate-500 dark:text-zinc-400 text-[11px]">
@@ -569,14 +580,26 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                 </div>
 
                 <div className="text-left sm:text-right shrink-0">
-                  <div className="text-2xl font-black text-slate-900 dark:text-white">{activeAttemptDetail.score} <span className="text-xs font-normal text-slate-400">/ 100</span></div>
-                  <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full mt-1 ${
-                    activeAttemptDetail.passed
-                      ? 'bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450'
-                      : 'bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-450'
-                  }`}>
-                    {activeAttemptDetail.passed ? 'LULUS' : 'TIDAK LULUS'}
-                  </span>
+                  {(() => {
+                    const isPendingGrading = Object.values(activeAttemptDetail.answers || {}).some(a => a.aiFeedback === 'Menunggu penilaian manual dari Admin.');
+                    return (
+                      <>
+                        <div className="text-2xl font-black text-slate-900 dark:text-white">
+                          {isPendingGrading ? 'Proses' : activeAttemptDetail.score}
+                          {!isPendingGrading && <span className="text-xs font-normal text-slate-400"> / 100</span>}
+                        </div>
+                        <span className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full mt-1 ${
+                          isPendingGrading
+                            ? 'bg-amber-100 dark:bg-amber-950/20 text-amber-700 dark:text-amber-450'
+                            : activeAttemptDetail.passed
+                              ? 'bg-emerald-100 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450'
+                              : 'bg-rose-100 dark:bg-rose-950/20 text-rose-700 dark:text-rose-450'
+                        }`}>
+                          {isPendingGrading ? 'MENUNGGU PENILAIAN' : (activeAttemptDetail.passed ? 'LULUS' : 'TIDAK LULUS')}
+                        </span>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

@@ -132,6 +132,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               const examQCount = questions.filter(q => q.examId === exam.id).length;
               const prevAttempt = myAttempts.find(a => a.examId === exam.id);
               const isClosed = exam.status === 'closed';
+              const isPendingGrading = prevAttempt ? Object.values(prevAttempt.answers || {}).some(a => a.aiFeedback === 'Menunggu penilaian manual dari Admin.') : false;
 
               return (
                 <div
@@ -152,12 +153,14 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                       )}
                       {prevAttempt && (
                         <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase flex items-center space-x-1 shrink-0 ${
-                          prevAttempt.passed
-                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
-                            : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
+                          isPendingGrading
+                            ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40'
+                            : prevAttempt.passed
+                              ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
+                              : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
                         }`}>
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Pernah Tes ({prevAttempt.score} pts)</span>
+                          {isPendingGrading ? <Clock className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                          <span>{isPendingGrading ? 'Menunggu Penilaian' : `Pernah Tes (${prevAttempt.score} pts)`}</span>
                         </span>
                       )}
                     </div>
@@ -266,17 +269,22 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm shadow-slate-100/50 dark:shadow-none">
             <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-              {myAttempts.map((att) => (
+              {myAttempts.map((att) => {
+                const isPendingGrading = Object.values(att.answers || {}).some(a => a.aiFeedback === 'Menunggu penilaian manual dari Admin.');
+                
+                return (
                 <div key={att.id} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/40 dark:hover:bg-zinc-950/40 transition-colors">
                   <div>
                     <div className="flex items-center space-x-2">
                       <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">{att.examTitle}</h3>
                       <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
-                        att.passed
-                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
-                          : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
+                        isPendingGrading
+                          ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40'
+                          : att.passed
+                            ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40'
+                            : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40'
                       }`}>
-                        {att.passed ? 'LULUS' : 'TIDAK LULUS'}
+                        {isPendingGrading ? 'MENUNGGU PENILAIAN' : (att.passed ? 'LULUS' : 'TIDAK LULUS')}
                       </span>
                     </div>
 
@@ -293,7 +301,11 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
                   <div className="flex items-center space-x-4 shrink-0">
                     <div className="text-right">
-                      <div className="text-xl font-black text-slate-800 dark:text-zinc-200">{att.score} <span className="text-xs font-normal text-slate-400 dark:text-zinc-500">/ 100</span></div>
+                      {isPendingGrading ? (
+                        <div className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-1">Proses Evaluasi</div>
+                      ) : (
+                        <div className="text-xl font-black text-slate-800 dark:text-zinc-200">{att.score} <span className="text-xs font-normal text-slate-400 dark:text-zinc-500">/ 100</span></div>
+                      )}
                       <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
                         Durasi: {Math.floor(att.durationSecondsUsed / 60)}m {att.durationSecondsUsed % 60}s
                       </span>
@@ -307,7 +319,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                     </button>
                   </div>
                 </div>
-              ))}
+              )})}
 
               {myAttempts.length === 0 && (
                 <div className="p-10 text-center text-slate-400 dark:text-zinc-500 text-xs">

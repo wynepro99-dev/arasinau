@@ -25,8 +25,10 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
   onClose,
   onRetakeExam
 }) => {
+  const isPendingGrading = Object.values(attempt.answers || {}).some(a => a.aiFeedback === 'Menunggu penilaian manual dari Admin.');
+
   useEffect(() => {
-    if (attempt.passed) {
+    if (attempt.passed && !isPendingGrading) {
       // Trigger confetti celebration on pass
       try {
         confetti({
@@ -38,7 +40,7 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
         // ignore if confetti fails
       }
     }
-  }, [attempt.passed]);
+  }, [attempt.passed, isPendingGrading]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
@@ -46,9 +48,11 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
         
         {/* Header Banner */}
         <div className={`p-6 border-b text-center relative ${
-          attempt.passed
-            ? 'bg-gradient-to-b from-emerald-950/60 to-slate-900 border-emerald-500/30'
-            : 'bg-gradient-to-b from-rose-950/60 to-slate-900 border-rose-500/30'
+          isPendingGrading
+            ? 'bg-gradient-to-b from-amber-950/60 to-slate-900 border-amber-500/30'
+            : attempt.passed
+              ? 'bg-gradient-to-b from-emerald-950/60 to-slate-900 border-emerald-500/30'
+              : 'bg-gradient-to-b from-rose-950/60 to-slate-900 border-rose-500/30'
         }`}>
           <button
             onClick={onClose}
@@ -59,15 +63,17 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
 
           {/* Badge Icon */}
           <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 border shadow-xl ${
-            attempt.passed
-              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-              : 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+            isPendingGrading
+              ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+              : attempt.passed
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                : 'bg-rose-500/20 text-rose-400 border-rose-500/40'
           }`}>
-            {attempt.passed ? <Award className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+            {isPendingGrading ? <Clock className="w-8 h-8" /> : (attempt.passed ? <Award className="w-8 h-8" /> : <XCircle className="w-8 h-8" />)}
           </div>
 
           <h2 className="text-xl font-black text-white">
-            {attempt.passed ? 'Selamat! Anda Dinyatakan LULUS' : 'Belum Memenuhi Passing Grade'}
+            {isPendingGrading ? 'Menunggu Penilaian Manual' : (attempt.passed ? 'Selamat! Anda Dinyatakan LULUS' : 'Belum Memenuhi Passing Grade')}
           </h2>
           <p className="text-xs text-slate-300 mt-1 max-w-md mx-auto">
             {attempt.examTitle}
@@ -75,10 +81,10 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
 
           {/* Main Big Score */}
           <div className="mt-4 inline-flex items-baseline space-x-1 px-6 py-2 bg-slate-950/60 border border-slate-800 rounded-2xl">
-            <span className={`text-4xl font-black ${attempt.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {attempt.score}
+            <span className={`text-4xl font-black ${isPendingGrading ? 'text-amber-400' : (attempt.passed ? 'text-emerald-400' : 'text-rose-400')}`}>
+              {isPendingGrading ? 'Proses' : attempt.score}
             </span>
-            <span className="text-xs text-slate-400 font-semibold">/ 100 PTS</span>
+            <span className="text-xs text-slate-400 font-semibold">{isPendingGrading ? '' : '/ 100 PTS'}</span>
           </div>
         </div>
 
@@ -101,8 +107,8 @@ export const ExamResultModal: React.FC<ExamResultModalProps> = ({
 
             <div className="bg-slate-850 p-3 rounded-xl border border-slate-800">
               <span className="text-slate-400 text-[10px]">Status Evaluasi</span>
-              <div className={`font-bold mt-0.5 ${attempt.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {attempt.passed ? 'Memenuhi Standard' : 'Perlu Remedial'}
+              <div className={`font-bold mt-0.5 ${isPendingGrading ? 'text-amber-400' : (attempt.passed ? 'text-emerald-400' : 'text-rose-400')}`}>
+                {isPendingGrading ? 'Menunggu Penilaian' : (attempt.passed ? 'Memenuhi Standard' : 'Perlu Remedial')}
               </div>
             </div>
           </div>
