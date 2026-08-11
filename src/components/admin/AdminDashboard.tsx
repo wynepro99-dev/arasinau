@@ -264,7 +264,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-zinc-850 text-sm">
-              {attempts.slice(0, 5).map((att) => (
+              {[...attempts]
+                .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+                .slice(0, 5)
+                .map((att) => (
                 <tr
                   key={att.id}
                   onClick={() => onViewAttemptDetail(att)}

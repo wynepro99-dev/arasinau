@@ -297,7 +297,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     const matchesScope = scopeFilter === 'all' || examScope === scopeFilter;
 
     return matchesSearch && matchesDept && matchesExam && matchesStatus && matchesScope;
-  });
+  }).sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 
   const avgFilteredScore = filteredAttempts.length > 0
     ? Math.round(filteredAttempts.reduce((acc, curr) => acc + curr.score, 0) / filteredAttempts.length)
