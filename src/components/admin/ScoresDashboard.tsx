@@ -623,11 +623,13 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
                         <div className="flex items-start justify-between gap-3">
                           <span className="text-xs font-extrabold text-slate-400 dark:text-zinc-500">Soal {idx + 1}</span>
                           <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
-                            ans.isCorrect
-                              ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
-                              : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400'
+                            ans.aiFeedback === 'Menunggu penilaian manual dari Admin.'
+                              ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400'
+                              : ans.isCorrect
+                                ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
+                                : 'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400'
                           }`}>
-                            {ans.isCorrect ? 'Benar' : 'Salah'}
+                            {ans.aiFeedback === 'Menunggu penilaian manual dari Admin.' ? 'Proses' : (ans.isCorrect ? 'Benar' : 'Salah')}
                           </span>
                         </div>
 
