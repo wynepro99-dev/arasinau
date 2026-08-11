@@ -80,6 +80,7 @@ export interface LearningModule {
   id: string;
   title: string;
   description: string;
+  imageUrl?: string; // Optional cover image
   fileUrl: string; // Could be a real URL or base64 data URL
   fileName: string;
   uploadedBy: string; // User name

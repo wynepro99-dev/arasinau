@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, LearningModule } from '../../types';
 import { getModules, addModule, deleteModule } from '../../lib/storage';
+import { Trash2, BookOpen, Image as ImageIcon, FileText, X } from 'lucide-react';
 
 interface ModulesDashboardProps {
   currentUser: User;
@@ -14,8 +15,14 @@ export function ModulesDashboard({ currentUser, onToast }: ModulesDashboardProps
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  
+  // File state (PDF/Document)
   const [fileUrl, setFileUrl] = useState('');
   const [fileName, setFileName] = useState('');
+  
+  // Image Cover state
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageName, setImageName] = useState('');
 
   useEffect(() => {
     setModules(getModules());
@@ -27,11 +34,22 @@ export function ModulesDashboard({ currentUser, onToast }: ModulesDashboardProps
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Simulate file upload with FileReader (convert to base64 for local demo)
     const reader = new FileReader();
     reader.onload = (event) => {
       setFileUrl(event.target?.result as string);
       setFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImageUrl(event.target?.result as string);
+      setImageName(file.name);
     };
     reader.readAsDataURL(file);
   };
@@ -49,14 +67,20 @@ export function ModulesDashboard({ currentUser, onToast }: ModulesDashboardProps
         description,
         fileUrl,
         fileName: fileName || 'module_file',
+        imageUrl: imageUrl || undefined,
         uploadedBy: currentUser.name
       });
       setModules(getModules());
       setIsUploading(false);
+      
+      // Reset
       setTitle('');
       setDescription('');
       setFileUrl('');
       setFileName('');
+      setImageUrl('');
+      setImageName('');
+      
       onToast('Modul berhasil diunggah!', 'success');
     } catch (err: any) {
       onToast(err.message || 'Gagal mengunggah modul.', 'error');
@@ -72,142 +96,168 @@ export function ModulesDashboard({ currentUser, onToast }: ModulesDashboardProps
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-zinc-800">
-        <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-            Modul Pembelajaran
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Materi dan bahan bacaan untuk karyawan.
-          </p>
-        </div>
+    <div className="space-y-12 animate-fade-in text-slate-800 dark:text-zinc-200">
+      
+      {/* Editorial Header */}
+      <section className="pt-6 sm:pt-10 flex flex-col items-center text-center space-y-4">
+        <h1 className="font-extrabold text-4xl md:text-5xl lg:text-6xl text-slate-900 dark:text-white tracking-tight">
+          Pusat Pembelajaran
+        </h1>
+        <p className="font-medium text-lg text-slate-500 dark:text-zinc-400 max-w-2xl">
+          Cerita kami, pembaruan materi terbaru, dan wawasan eksklusif. Temukan apa saja yang ingin Anda pelajari tentang perusahaan.
+        </p>
+        
         {canUpload && (
-          <button
-            onClick={() => setIsUploading(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Unggah Modul
-          </button>
+          <div className="pt-6">
+             <button
+              onClick={() => setIsUploading(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-transform active:scale-95 shadow-md"
+            >
+              <FileText className="w-5 h-5" />
+              Tulis & Unggah Modul Baru
+            </button>
+          </div>
         )}
-      </div>
+      </section>
 
+      {/* Upload Form (Modal Style Overlay) */}
       {isUploading && (
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-zinc-800">
-          <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Unggah Modul Baru</h3>
-          <form onSubmit={handleUpload} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">Judul Modul</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors dark:text-white"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">Deskripsi (Opsional)</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors dark:text-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300 mb-1">File (PDF/Image)</label>
-              <input
-                type="file"
-                accept=".pdf,image/*"
-                onChange={handleFileChange}
-                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900/30 dark:file:text-indigo-400"
-                required
-              />
-            </div>
-            <div className="flex gap-3 justify-end mt-6">
-              <button
-                type="button"
-                onClick={() => setIsUploading(false)}
-                className="px-4 py-2 text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-              >
-                Simpan
-              </button>
-            </div>
-          </form>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-zinc-800 relative">
+            <button 
+              onClick={() => setIsUploading(false)}
+              className="absolute top-6 right-6 p-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-slate-600 dark:text-zinc-300" />
+            </button>
+            
+            <h3 className="text-2xl font-extrabold mb-6 text-slate-900 dark:text-white">Tambah Materi Baru</h3>
+            
+            <form onSubmit={handleUpload} className="space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-2">Judul Artikel / Modul</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ketik judul yang menarik..."
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors dark:text-white text-lg font-medium"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-2">File Dokumen Pembelajaran (PDF, dsb)</label>
+                <label className="flex items-center justify-center w-full p-4 border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group">
+                  <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="hidden" required />
+                  <div className="flex flex-col items-center text-slate-500 dark:text-zinc-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                    <FileText className="w-8 h-8 mb-2" />
+                    <span className="font-semibold text-sm">{fileName ? fileName : 'Pilih File Dokumen'}</span>
+                  </div>
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-2">Gambar Sampul Depan (Cover)</label>
+                <label className="flex items-center justify-center w-full p-4 border-2 border-dashed border-slate-300 dark:border-zinc-700 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group relative overflow-hidden">
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  
+                  {imageUrl ? (
+                    <div className="absolute inset-0 w-full h-full">
+                       <img src={imageUrl} alt="Preview" className="w-full h-full object-cover opacity-60" />
+                       <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                         <span className="text-white font-bold px-4 py-2 rounded-full bg-black/50 backdrop-blur-md">Ganti Gambar</span>
+                       </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center text-slate-500 dark:text-zinc-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                      <ImageIcon className="w-8 h-8 mb-2" />
+                      <span className="font-semibold text-sm">Pilih Gambar Sampul (Opsional)</span>
+                    </div>
+                  )}
+                </label>
+                <p className="text-xs text-slate-500 mt-2">Disarankan rasio 16:9 (Landscape) agar tampil maksimal seperti portal berita.</p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-lg"
+                >
+                  Terbitkan
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Editorial Grid List (Gojek News Style) */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-6 pb-20">
         {modules.map(mod => (
-          <div key={mod.id} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-slate-200 dark:border-zinc-800 p-6 hover:shadow-md transition-shadow flex flex-col h-full relative group">
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+          <a 
+            href={mod.fileUrl} 
+            target="_blank" 
+            rel="noreferrer" 
+            key={mod.id} 
+            className="flex flex-col gap-4 group cursor-pointer relative outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 rounded-3xl"
+          >
+            {/* The Delete Button (Only for Admin) absolutely positioned */}
+            {canUpload && (
+              <button 
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  e.stopPropagation();
+                  handleDelete(mod.id); 
+                }}
+                className="absolute top-4 right-4 z-10 bg-rose-500 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:bg-rose-600 hover:scale-110"
+                title="Hapus Modul"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+
+            <div className="overflow-hidden rounded-[24px] aspect-video w-full relative bg-slate-100 dark:bg-zinc-800/80 ring-1 ring-slate-200/50 dark:ring-zinc-800/50">
+              {mod.imageUrl ? (
+                <img 
+                  src={mod.imageUrl} 
+                  alt={mod.title} 
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" 
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-100 dark:from-zinc-800 dark:to-zinc-900 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-105">
+                  <BookOpen className="w-16 h-16 text-slate-300 dark:text-zinc-700 drop-shadow-sm" />
                 </div>
-                {canUpload && (
-                  <button 
-                    onClick={() => handleDelete(mod.id)}
-                    className="text-red-500 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Hapus Modul"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                )}
+              )}
+              {/* Optional: Reading tag overlay */}
+              <div className="absolute top-4 left-4">
+                 <span className="px-3 py-1 bg-white/90 dark:bg-black/70 backdrop-blur-md text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider rounded-full shadow-sm">
+                   Bacaan
+                 </span>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 line-clamp-2">
-                {mod.title}
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-zinc-400 mb-4 line-clamp-3">
-                {mod.description || 'Tidak ada deskripsi'}
-              </p>
             </div>
             
-            <div className="mt-auto pt-4 border-t border-slate-100 dark:border-zinc-800">
-              <div className="flex justify-between items-center mb-4 text-xs text-slate-500">
-                <span>By {mod.uploadedBy}</span>
-                <span>{new Date(mod.createdAt).toLocaleDateString('id-ID')}</span>
-              </div>
-              <a 
-                href={mod.fileUrl} 
-                download={mod.fileName}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-50 dark:bg-zinc-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl transition-colors font-medium text-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                Lihat Modul
-              </a>
+            <div className="flex flex-col justify-between h-full px-1">
+              <h3 className="font-extrabold text-xl md:text-2xl text-slate-900 dark:text-white mb-2 leading-[1.3] group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-3">
+                {mod.title}
+              </h3>
+              <p className="font-bold text-xs md:text-sm text-slate-500 dark:text-zinc-400 uppercase tracking-wide mt-2">
+                Oleh {mod.uploadedBy} <span className="mx-1.5">•</span> {new Date(mod.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric'})}
+              </p>
             </div>
-          </div>
+          </a>
         ))}
 
         {modules.length === 0 && !isUploading && (
-          <div className="col-span-full py-12 text-center bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-zinc-800">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-slate-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <p className="text-slate-500 dark:text-zinc-400">Belum ada modul yang diunggah.</p>
+          <div className="col-span-full py-20 text-center flex flex-col items-center justify-center">
+             <div className="w-24 h-24 mb-6 rounded-3xl bg-slate-100 dark:bg-zinc-800/50 flex items-center justify-center ring-1 ring-slate-200 dark:ring-zinc-700">
+               <FileText className="w-10 h-10 text-slate-400 dark:text-zinc-500" />
+             </div>
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Belum Ada Materi</h3>
+            <p className="text-slate-500 dark:text-zinc-400 max-w-md">Admin belum mempublikasikan materi atau modul pembelajaran terbaru saat ini.</p>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
