@@ -1,5 +1,5 @@
 import { User, ExamPackage, Question, ExamAttempt, ExamWithQuestions, LearningModule } from '../types';
-import { INITIAL_USERS, INITIAL_EXAMS, INITIAL_QUESTIONS, INITIAL_ATTEMPTS, INITIAL_MODULES } from '../data/mockData';
+import { INITIAL_USERS, INITIAL_EXAMS, INITIAL_QUESTIONS, INITIAL_ATTEMPTS } from '../data/mockData';
 import { getSupabaseClient } from './supabase';
 
 // In-Memory Database Store (Tanpa keharusan localStorage)
@@ -7,7 +7,7 @@ let memoryUsers: User[] = [...INITIAL_USERS];
 let memoryExams: ExamPackage[] = [];
 let memoryQuestions: Question[] = [];
 let memoryAttempts: ExamAttempt[] = [];
-let memoryModules: LearningModule[] = [...INITIAL_MODULES];
+let memoryModules: LearningModule[] = [];
 let memoryCurrentUser: User | null = null;
 let isPerformingDelete = false;
 
