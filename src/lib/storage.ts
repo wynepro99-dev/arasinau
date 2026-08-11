@@ -1,5 +1,5 @@
 import { User, ExamPackage, Question, ExamAttempt, ExamWithQuestions, LearningModule } from '../types';
-import { INITIAL_USERS, INITIAL_EXAMS, INITIAL_QUESTIONS, INITIAL_ATTEMPTS } from '../data/mockData';
+import { INITIAL_USERS, INITIAL_EXAMS, INITIAL_QUESTIONS, INITIAL_ATTEMPTS, INITIAL_MODULES } from '../data/mockData';
 import { getSupabaseClient } from './supabase';
 
 // In-Memory Database Store (Tanpa keharusan localStorage)
@@ -7,7 +7,7 @@ let memoryUsers: User[] = [...INITIAL_USERS];
 let memoryExams: ExamPackage[] = [];
 let memoryQuestions: Question[] = [];
 let memoryAttempts: ExamAttempt[] = [];
-let memoryModules: LearningModule[] = [];
+let memoryModules: LearningModule[] = [...INITIAL_MODULES];
 let memoryCurrentUser: User | null = null;
 let isPerformingDelete = false;
 
@@ -105,7 +105,7 @@ export async function initStorage() {
   }
 
   // Auto trigger background sync if Supabase is connected
-  syncFromSupabase().catch(() => {});
+  syncFromSupabase().catch(() => { });
 }
 
 let autoSyncInterval: any = null;
@@ -119,7 +119,7 @@ export function startSupabaseAutoSync(onDataChange?: () => void) {
     if (res.success && onDataChange) {
       onDataChange();
     }
-  }).catch(() => {});
+  }).catch(() => { });
 
   // Clean existing interval/subscription if any
   if (autoSyncInterval) clearInterval(autoSyncInterval);
@@ -127,7 +127,7 @@ export function startSupabaseAutoSync(onDataChange?: () => void) {
     try {
       const client = getSupabaseClient();
       if (client) client.removeChannel(realtimeChannel);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const client = getSupabaseClient();
@@ -166,7 +166,7 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
   try {
     // 1. Fetch users from Supabase first
     const { data: usersData, error: usersErr } = await client.from('users').select('*');
-    
+
     if (!usersErr && usersData && usersData.length > 0) {
       // Map Supabase rows directly to memoryUsers
       memoryUsers = usersData.map((u: any) => {
@@ -248,9 +248,9 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
       }));
     }
 
-    return { 
-      success: true, 
-      message: `Berhasil sinkronisasi! ${memoryUsers.length} Akun Personel & Data Ujian telah sinkron dengan Supabase.` 
+    return {
+      success: true,
+      message: `Berhasil sinkronisasi! ${memoryUsers.length} Akun Personel & Data Ujian telah sinkron dengan Supabase.`
     };
   } catch (err: any) {
     console.error('Supabase Sync Error:', err);
@@ -343,9 +343,9 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
     // Re-sync from database to get accurate state
     await syncFromSupabase();
 
-    return { 
-      success: true, 
-      message: `Data berhasil disinkronkan ke Supabase Database! (${newUsers.length} akun baru ditambahkan)` 
+    return {
+      success: true,
+      message: `Data berhasil disinkronkan ke Supabase Database! (${newUsers.length} akun baru ditambahkan)`
     };
   } catch (err: any) {
     console.error('Seed Supabase Error:', err);
@@ -484,9 +484,9 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
   }
 
   const idx = memoryUsers.findIndex(u => u.id === userId);
-  
+
   const finalUser = dbResult || { ...(idx !== -1 ? memoryUsers[idx] : {} as User), ...updates };
-  
+
   if (idx !== -1) {
     memoryUsers[idx] = finalUser;
   }
@@ -649,7 +649,7 @@ export async function deleteQuestion(questionId: string): Promise<{ success: boo
   isPerformingDelete = true;
   const prevQuestions = [...memoryQuestions];
   memoryQuestions = memoryQuestions.filter(q => q.id !== questionId);
-  
+
   const client = getSupabaseClient();
   if (client) {
     try {
@@ -848,9 +848,9 @@ export function clearAllData(): void {
   memoryAttempts = [];
   const client = getSupabaseClient();
   if (client) {
-    Promise.resolve(client.from('exam_packages').delete().neq('id', '')).catch(() => {});
-    Promise.resolve(client.from('questions').delete().neq('id', '')).catch(() => {});
-    Promise.resolve(client.from('exam_attempts').delete().neq('id', '')).catch(() => {});
+    Promise.resolve(client.from('exam_packages').delete().neq('id', '')).catch(() => { });
+    Promise.resolve(client.from('questions').delete().neq('id', '')).catch(() => { });
+    Promise.resolve(client.from('exam_attempts').delete().neq('id', '')).catch(() => { });
   }
 }
 

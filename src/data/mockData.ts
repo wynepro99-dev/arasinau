@@ -173,3 +173,33 @@ export const INITIAL_QUESTIONS: Question[] = [
 ];
 
 export const INITIAL_ATTEMPTS: ExamAttempt[] = [];
+
+export const INITIAL_MODULES: LearningModule[] = [
+  {
+    id: 'mod-1',
+    title: 'Panduan Filosofi Pendidikan Smarteducafe',
+    description: 'Modul ini berisi dasar-dasar filosofi pembelajaran dan SEOS (Smarteducafe Education Operating System). Sangat disarankan untuk dibaca oleh seluruh Karyawan baru.',
+    fileUrl: '#',
+    fileName: 'Filosofi_Pendidikan_SEC_v1.pdf',
+    uploadedBy: 'Admin Pusat',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'mod-2',
+    title: 'Standar Operasional Pengajaran',
+    description: 'SOP lengkap untuk pengajaran di kelas, termasuk tata cara interaksi dengan siswa dan teknik memancing rasa ingin tahu melalui pertanyaan "Mengapa?".',
+    fileUrl: '#',
+    fileName: 'SOP_Pengajaran_2026.pdf',
+    uploadedBy: 'Della Ananto',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'mod-3',
+    title: 'Materi Pelatihan Teknologi Society 5.0',
+    description: 'Panduan integrasi teknologi AI ke dalam pembelajaran sehari-hari untuk mendukung peran mentor manusia.',
+    fileUrl: '#',
+    fileName: 'Society5.0_Integration_Guide.pdf',
+    uploadedBy: 'Egi (Vergiawan)',
+    createdAt: new Date().toISOString()
+  }
+];
