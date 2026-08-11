@@ -164,8 +164,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
       className: `w-[24px] h-[24px] transition-all duration-300 ${
         isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-zinc-400'
       }`,
-      fill: isActive ? 'currentColor' : 'none',
-      strokeWidth: isActive ? 2 : 1.75
+      fill: 'none',
+      strokeWidth: isActive ? 2.5 : 2
     };
     switch (key) {
       case 'dashboard': return <Grid2x2 {...iconProps} />;
