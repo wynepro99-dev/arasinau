@@ -1,73 +1,98 @@
 import React, { useMemo } from 'react';
-import { X, Trophy, Medal } from 'lucide-react';
-import { ExamAttempt, ExamPackage } from '../../types';
+import { X, Trophy, Medal, Info } from 'lucide-react';
+import { ExamAttempt, ExamPackage, User } from '../../types';
 
-interface BankRankingModalProps {
+interface RankingModalProps {
+  scope: 'BANK' | 'SEC';
   attempts: ExamAttempt[];
   exams: ExamPackage[];
+  users: User[];
   onClose: () => void;
 }
 
-export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, exams, onClose }) => {
+export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exams, users, onClose }) => {
   const ranking = useMemo(() => {
-    // 1. Get all BANK exams
-    const bankExamIds = new Set(exams.filter(e => e.scope === 'BANK').map(e => e.id));
+    const scopeExams = exams.filter(e => (e.scope || 'BANK') === scope);
+    const scopeExamIds = new Set(scopeExams.map(e => e.id));
 
-    // 2. Filter attempts to only those for BANK exams
-    const bankAttempts = attempts.filter(a => bankExamIds.has(a.examId));
+    const scopeAttempts = attempts.filter(a => scopeExamIds.has(a.examId));
 
-    // Deduplicate: only count the FIRST attempt per user per exam
-    const sorted = [...bankAttempts].sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
+    const sortedAttempts = [...scopeAttempts].sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
     const seen = new Set<string>();
-    const validBankAttempts = sorted.filter(a => {
+    const validAttempts = sortedAttempts.filter(a => {
       const key = `${a.userId}-${a.examId}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
 
-    // 3. Aggregate per user
-    const userStats: Record<string, { userId: string; userName: string; userDepartment: string; totalScore: number; count: number }> = {};
+    const userStats: Record<string, { 
+      userId: string; 
+      userName: string; 
+      userDepartment: string; 
+      totalScore: number; 
+      count: number;
+      authoredCount: number;
+    }> = {};
 
-    validBankAttempts.forEach(a => {
+    users.forEach(u => {
+      userStats[u.id] = {
+        userId: u.id,
+        userName: u.name,
+        userDepartment: u.department || 'Lainnya',
+        totalScore: 0,
+        count: 0,
+        authoredCount: 0
+      };
+    });
+
+    validAttempts.forEach(a => {
       if (!userStats[a.userId]) {
         userStats[a.userId] = {
           userId: a.userId,
           userName: a.userName,
           userDepartment: a.userDepartment || 'Lainnya',
           totalScore: 0,
-          count: 0
+          count: 0,
+          authoredCount: 0
         };
       }
       userStats[a.userId].totalScore += a.score;
       userStats[a.userId].count += 1;
     });
 
-    // 4. Calculate average and sort
-    const ranked = Object.values(userStats).map(u => ({
-      ...u,
-      averageScore: u.count > 0 ? Math.round(u.totalScore / u.count) : 0
-    }));
-
-    ranked.sort((a, b) => {
-      if (b.averageScore !== a.averageScore) return b.averageScore - a.averageScore;
-      return b.count - a.count;
+    scopeExams.forEach(exam => {
+      const author = users.find(u => u.name === exam.authorName);
+      if (author && userStats[author.id]) {
+        userStats[author.id].totalScore += 100;
+        userStats[author.id].count += 1;
+        userStats[author.id].authoredCount += 1;
+      }
     });
 
+    const ranked = Object.values(userStats)
+      .filter(u => u.count > 0)
+      .sort((a, b) => {
+        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+        return b.count - a.count;
+      });
+
     return ranked;
-  }, [attempts, exams]);
+  }, [scope, attempts, exams, users]);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="p-6 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between sticky top-0 bg-white dark:bg-zinc-900 z-10 rounded-t-2xl">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              scope === 'SEC' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400'
+            }`}>
               <Trophy className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Ranking Nilai BANK</h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Peringkat karyawan berdasarkan nilai rata-rata pada ujian ber-scope BANK.</p>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white">Ranking Nilai {scope}</h2>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Peringkat berdasarkan Total Poin dari keseluruhan ujian ber-scope {scope}.</p>
             </div>
           </div>
           <button
@@ -79,6 +104,15 @@ export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, ex
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
+          
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-xl flex items-start space-x-3">
+            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800 dark:text-blue-300">
+              <strong className="font-bold">Info Perhitungan Peringkat:</strong>
+              <p className="mt-1 text-xs">Peringkat diurutkan berdasarkan Total Poin. Karyawan yang berstatus sebagai <strong>Pembuat Ujian</strong> secara otomatis mendapatkan kompensasi poin penuh (100) untuk setiap paket ujian yang mereka buat (dihitung sebagai selesai), sehingga ranking tetap adil.</p>
+            </div>
+          </div>
+
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm text-slate-600 dark:text-zinc-300 border-collapse">
@@ -88,7 +122,7 @@ export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, ex
                     <th className="px-5 py-4">Nama Karyawan</th>
                     <th className="px-5 py-4">Departemen</th>
                     <th className="px-5 py-4 text-center">Ujian Selesai</th>
-                    <th className="px-5 py-4 text-center">Rata-rata Nilai</th>
+                    <th className="px-5 py-4 text-center">Total Poin</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/50">
@@ -100,7 +134,14 @@ export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, ex
                          i === 2 ? <Medal className="w-6 h-6 text-amber-700 mx-auto" /> :
                          <span className="font-bold text-slate-400 dark:text-zinc-500">{i + 1}</span>}
                       </td>
-                      <td className="px-5 py-4 font-bold text-slate-800 dark:text-white">{r.userName}</td>
+                      <td className="px-5 py-4">
+                        <div className="font-bold text-slate-800 dark:text-white">{r.userName}</div>
+                        {r.authoredCount > 0 && (
+                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                            + {r.authoredCount} Ujian sebagai Pembuat
+                          </div>
+                        )}
+                      </td>
                       <td className="px-5 py-4">
                         <span className="px-2.5 py-1 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg text-xs font-medium">
                           {r.userDepartment}
@@ -108,8 +149,8 @@ export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, ex
                       </td>
                       <td className="px-5 py-4 text-center font-mono font-medium">{r.count}</td>
                       <td className="px-5 py-4 text-center">
-                        <span className={`font-bold ${r.averageScore >= 75 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                          {r.averageScore}
+                        <span className={`font-black ${r.totalScore >= 100 ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                          {r.totalScore}
                         </span>
                       </td>
                     </tr>
@@ -117,7 +158,7 @@ export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, ex
                   {ranking.length === 0 && (
                     <tr>
                       <td colSpan={5} className="px-5 py-8 text-center text-slate-500 dark:text-zinc-500">
-                        Belum ada data nilai BANK yang terkumpul.
+                        Belum ada data nilai {scope} yang terkumpul.
                       </td>
                     </tr>
                   )}

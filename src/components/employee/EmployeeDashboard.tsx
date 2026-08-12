@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Trophy
 } from 'lucide-react';
-import { BankRankingModal } from '../admin/BankRankingModal';
+import { RankingModal } from '../admin/RankingModal';
+import { getUsers } from '../../lib/storage';
 
 interface EmployeeDashboardProps {
   currentUser: User;
@@ -37,7 +38,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 }) => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showArchived, setShowArchived] = useState(false);
-  const [showRankModal, setShowRankModal] = useState(false);
+  const [showRankModal, setShowRankModal] = useState<'BANK' | 'SEC' | null>(null);
 
   // Filter attempts for this current employee
   const myAttempts = attempts.filter(a => a.userId === currentUser.id);
@@ -88,13 +89,26 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             </p>
           </div>
           
-          <button
-            onClick={() => setShowRankModal(true)}
-            className="hidden sm:flex shrink-0 items-center space-x-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
-          >
-            <Trophy className="w-4 h-4" />
-            <span>Ranking BANK</span>
-          </button>
+          <div className="hidden sm:flex shrink-0 items-center space-x-2">
+            {(currentUser.company === 'ALL' || currentUser.company === 'BANK') && (
+              <button
+                onClick={() => setShowRankModal('BANK')}
+                className="flex items-center space-x-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
+              >
+                <Trophy className="w-4 h-4" />
+                <span>Ranking BANK</span>
+              </button>
+            )}
+            {(currentUser.company === 'ALL' || currentUser.company === 'SEC') && (
+              <button
+                onClick={() => setShowRankModal('SEC')}
+                className="flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all"
+              >
+                <Trophy className="w-4 h-4" />
+                <span>Ranking SEC</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Stat Cards - Responsive Grid */}
@@ -115,13 +129,26 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={() => setShowRankModal(true)}
-          className="w-full sm:hidden flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
-        >
-          <Trophy className="w-4 h-4" />
-          <span>Lihat Ranking BANK</span>
-        </button>
+        <div className="w-full sm:hidden flex flex-col space-y-2 mt-4">
+          {(currentUser.company === 'ALL' || currentUser.company === 'BANK') && (
+            <button
+              onClick={() => setShowRankModal('BANK')}
+              className="flex w-full items-center justify-center space-x-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Lihat Ranking BANK</span>
+            </button>
+          )}
+          {(currentUser.company === 'ALL' || currentUser.company === 'SEC') && (
+            <button
+              onClick={() => setShowRankModal('SEC')}
+              className="flex w-full items-center justify-center space-x-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 transition-all"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Lihat Ranking SEC</span>
+            </button>
+          )}
+        </div>
       </div>
 
 
@@ -352,10 +379,12 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
       )}
 
       {showRankModal && (
-        <BankRankingModal 
+        <RankingModal 
+          scope={showRankModal}
           attempts={attempts} 
-          exams={exams} 
-          onClose={() => setShowRankModal(false)} 
+          exams={exams}
+          users={getUsers()}
+          onClose={() => setShowRankModal(null)} 
         />
       )}
 

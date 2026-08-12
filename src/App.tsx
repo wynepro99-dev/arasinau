@@ -231,6 +231,15 @@ export default function App() {
     setActiveTakingExam(exam);
   };
 
+  const isSuperAdmin = currentUser?.name.toLowerCase().includes('taka') ?? false;
+  const adminAllowedCompany = currentUser?.company || 'BANK';
+  const visibleAttemptsForAdmin = (adminAllowedCompany === 'ALL' || isSuperAdmin) 
+    ? attempts 
+    : attempts.filter(a => {
+        const ex = exams.find(e => e.id === a.examId);
+        return (ex?.scope || 'BANK') === adminAllowedCompany;
+      });
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
       
@@ -284,7 +293,7 @@ export default function App() {
                   <AdminDashboard
                     exams={exams}
                     questions={questions}
-                    attempts={attempts}
+                    attempts={visibleAttemptsForAdmin}
                     onNavigateTab={setActiveTab}
                     onOpenCreateExam={() => setActiveTab('exams')}
                     onViewAttemptDetail={(att) => {
@@ -306,7 +315,8 @@ export default function App() {
 
                 {activeTab === 'scores' && (
                   <ScoresDashboard
-                    attempts={attempts}
+                    currentUser={currentUser!}
+                    attempts={visibleAttemptsForAdmin}
                     exams={exams}
                     onRefresh={loadData}
                     onToast={showToast}

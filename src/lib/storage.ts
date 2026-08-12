@@ -67,9 +67,7 @@ export async function initStorage() {
 
             if (!error && data) {
               let overrideRole = data.role;
-              if (data.email === 'vergiawan@arasinau.co.id' || data.email === 'lilis.ariyani@arasinau.co.id') {
-                overrideRole = 'egi';
-              }
+
               memoryCurrentUser = {
                 id: data.id,
                 name: data.name,
@@ -171,9 +169,6 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
       // Map Supabase rows directly to memoryUsers
       memoryUsers = usersData.map((u: any) => {
         let overrideRole = u.role;
-        if (u.email === 'vergiawan@arasinau.co.id' || u.email === 'lilis.ariyani@arasinau.co.id') {
-          overrideRole = 'egi';
-        }
 
         return {
           id: u.id,

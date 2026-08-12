@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ExamAttempt, ExamPackage, AttemptAnswer } from '../../types';
 import { getQuestions, updateAttempt, clearAllAttempts, getUsers } from '../../lib/storage';
-import { BankRankingModal } from './BankRankingModal';
+import { RankingModal } from './RankingModal';
 import { 
   Award, 
   Search, 
@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 
 interface ScoresDashboardProps {
+  currentUser: User;
   attempts: ExamAttempt[];
   exams: ExamPackage[];
   onToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
@@ -30,6 +31,7 @@ interface ScoresDashboardProps {
 }
 
 export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
+  currentUser,
   attempts,
   exams,
   onToast,
@@ -48,7 +50,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     selectedAttemptFromParent || null
   );
   
-  const [showRankModal, setShowRankModal] = useState(false);
+  const [showRankModal, setShowRankModal] = useState<'BANK' | 'SEC' | null>(null);
 
   // Manual Essay Grading State per question
   const [essayGrades, setEssayGrades] = useState<Record<string, { pointsEarned: number; feedback: string }>>({});
@@ -346,13 +348,25 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 shrink-0">
-          <button
-            onClick={() => setShowRankModal(true)}
-            className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-amber-500/20 dark:shadow-none transition-all flex items-center space-x-1.5"
-          >
-            <Award className="w-4 h-4" />
-            <span>Ranking BANK</span>
-          </button>
+          {(currentUser.company === 'ALL' || currentUser.company === 'BANK') && (
+            <button
+              onClick={() => setShowRankModal('BANK')}
+              className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-amber-500/20 dark:shadow-none transition-all flex items-center space-x-1.5"
+            >
+              <Award className="w-4 h-4" />
+              <span>Ranking BANK</span>
+            </button>
+          )}
+
+          {(currentUser.company === 'ALL' || currentUser.company === 'SEC') && (
+            <button
+              onClick={() => setShowRankModal('SEC')}
+              className="px-3.5 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-500/20 dark:shadow-none transition-all flex items-center space-x-1.5"
+            >
+              <Award className="w-4 h-4" />
+              <span>Ranking SEC</span>
+            </button>
+          )}
 
           <button
             onClick={handleExportExcel}
@@ -750,10 +764,12 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
 
       {/* Rank Modal */}
       {showRankModal && (
-        <BankRankingModal 
+        <RankingModal 
+          scope={showRankModal}
           attempts={validAttempts} 
           exams={exams} 
-          onClose={() => setShowRankModal(false)} 
+          users={getUsers()}
+          onClose={() => setShowRankModal(null)} 
         />
       )}
 
