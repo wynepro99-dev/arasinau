@@ -137,18 +137,30 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
 
 
 
-  // Countdown timer effect
-  useEffect(() => {
-    if (timeLeftSeconds <= 0) {
-      handleFinalSubmit();
-      return;
-    }
+  // Countdown timer effect (resistant to background tab throttling)
+  const lastTickRef = React.useRef<number>(Date.now());
 
+  useEffect(() => {
+    lastTickRef.current = Date.now();
     const timer = setInterval(() => {
-      setTimeLeftSeconds(prev => prev - 1);
+      const now = Date.now();
+      const deltaMs = now - lastTickRef.current;
+      const secondsPassed = Math.floor(deltaMs / 1000);
+
+      if (secondsPassed > 0) {
+        setTimeLeftSeconds(prev => Math.max(0, prev - secondsPassed));
+        lastTickRef.current += secondsPassed * 1000;
+      }
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Separate effect to trigger auto-submit when time is up
+  useEffect(() => {
+    if (timeLeftSeconds <= 0) {
+      handleFinalSubmit();
+    }
   }, [timeLeftSeconds]);
 
   // Anti-cheat listeners to block right-click, copy, cut, drag, and standard clipboard keys
