@@ -358,14 +358,6 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
               {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
             </span>
           </div>
-
-          <button
-            onClick={() => setShowSubmitModal(true)}
-            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 flex items-center space-x-1.5"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Kumpulkan Ujian</span>
-          </button>
         </div>
       </div>
 
@@ -571,14 +563,23 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
             })}
           </div>
 
-          <button
-            onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
-            disabled={currentIndex === questions.length - 1}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-slate-300 border border-slate-800 rounded-xl text-xs font-semibold flex items-center space-x-1"
-          >
-            <span>Selanjutnya</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          {currentIndex === questions.length - 1 ? (
+            <button
+              onClick={() => setShowSubmitModal(true)}
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-500 rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-lg shadow-emerald-500/20"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Kumpulkan Ujian</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setCurrentIndex(prev => Math.min(questions.length - 1, prev + 1))}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-xl text-xs font-semibold flex items-center space-x-1"
+            >
+              <span>Selanjutnya</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
       </div>

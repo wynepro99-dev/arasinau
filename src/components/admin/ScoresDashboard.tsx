@@ -94,16 +94,22 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
       const maxPts = qObj?.points || 25;
       const isEssay = qObj?.type === 'case_study' || qObj?.type === 'essay' || !!ans.essayAnswer;
 
-      if (isEssay && essayGrades[qId]) {
-        const inputPts = Math.min(maxPts, Math.max(0, Number(essayGrades[qId].pointsEarned || 0)));
-        const fb = essayGrades[qId].feedback || '';
+      if (isEssay) {
+        const currentInputPts = essayGrades[qId]?.pointsEarned ?? ans.pointsEarned ?? 0;
+        const inputPts = Math.min(maxPts, Math.max(0, Number(currentInputPts)));
+        
+        let currentFb = essayGrades[qId]?.feedback ?? ans.aiFeedback ?? '';
+        if (currentFb === 'Menunggu penilaian manual dari Admin.') {
+          currentFb = '';
+        }
+        
         const isPass = inputPts >= Math.round(maxPts * 0.55);
 
         updatedAnswers[qId] = {
           ...ans,
           pointsEarned: inputPts,
           isCorrect: isPass,
-          aiFeedback: fb
+          aiFeedback: currentFb
         };
       } else {
         updatedAnswers[qId] = { ...ans };
@@ -325,21 +331,7 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 shrink-0">
-          {attempts.length > 0 && (
-            <button
-              onClick={async () => {
-                if (window.confirm('Apakah Anda yakin ingin menghapus SELURUH riwayat nilai ujian? Tindakan ini tidak dapat dibatalkan.')) {
-                  await clearAllAttempts();
-                  onToast('Seluruh riwayat nilai ujian telah berhasil dihapus.', 'info');
-                  if (onRefresh) onRefresh();
-                }
-              }}
-              className="px-3.5 py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold border border-transparent dark:border-rose-900/40 transition-all flex items-center space-x-1.5"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Hapus</span>
-            </button>
-          )}
+
           <button
             onClick={handleExportExcel}
             className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-600/20 dark:shadow-none transition-all flex items-center space-x-1.5"
