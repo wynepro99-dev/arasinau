@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ExamAttempt, ExamPackage, AttemptAnswer } from '../../types';
 import { getQuestions, updateAttempt, clearAllAttempts, getUsers } from '../../lib/storage';
+import { BankRankingModal } from './BankRankingModal';
 import { 
   Award, 
   Search, 
@@ -46,6 +47,8 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
   const [activeAttemptDetail, setActiveAttemptDetail] = useState<ExamAttempt | null>(
     selectedAttemptFromParent || null
   );
+  
+  const [showRankModal, setShowRankModal] = useState(false);
 
   // Manual Essay Grading State per question
   const [essayGrades, setEssayGrades] = useState<Record<string, { pointsEarned: number; feedback: string }>>({});
@@ -285,10 +288,22 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
     onToast('File Excel Rekap Hasil Ujian berhasil diunduh dengan kolom terpisah!', 'success');
   };
 
-  // Unique filters data source
-  const departments = Array.from(new Set(attempts.map((a) => a.userDepartment || 'Lainnya')));
+  // Valid Attempts (Only the first attempt per user per exam)
+  const validAttempts = React.useMemo(() => {
+    const sorted = [...attempts].sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
+    const seen = new Set<string>();
+    return sorted.filter(a => {
+      const key = `${a.userId}-${a.examId}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [attempts]);
 
-  const filteredAttempts = attempts.filter((att) => {
+  // Unique filters data source
+  const departments = Array.from(new Set(validAttempts.map((a) => a.userDepartment || 'Lainnya')));
+
+  const filteredAttempts = validAttempts.filter((att) => {
     const matchesSearch = att.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           att.examTitle.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = deptFilter === 'all' || att.userDepartment === deptFilter;
@@ -331,6 +346,13 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 shrink-0">
+          <button
+            onClick={() => setShowRankModal(true)}
+            className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-amber-500/20 dark:shadow-none transition-all flex items-center space-x-1.5"
+          >
+            <Award className="w-4 h-4" />
+            <span>Ranking BANK</span>
+          </button>
 
           <button
             onClick={handleExportExcel}
@@ -724,6 +746,15 @@ export const ScoresDashboard: React.FC<ScoresDashboardProps> = ({
 
           </div>
         </div>
+      )}
+
+      {/* Rank Modal */}
+      {showRankModal && (
+        <BankRankingModal 
+          attempts={validAttempts} 
+          exams={exams} 
+          onClose={() => setShowRankModal(false)} 
+        />
       )}
 
     </div>
