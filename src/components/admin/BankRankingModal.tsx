@@ -16,10 +16,20 @@ export const BankRankingModal: React.FC<BankRankingModalProps> = ({ attempts, ex
     // 2. Filter attempts to only those for BANK exams
     const bankAttempts = attempts.filter(a => bankExamIds.has(a.examId));
 
+    // Deduplicate: only count the FIRST attempt per user per exam
+    const sorted = [...bankAttempts].sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
+    const seen = new Set<string>();
+    const validBankAttempts = sorted.filter(a => {
+      const key = `${a.userId}-${a.examId}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     // 3. Aggregate per user
     const userStats: Record<string, { userId: string; userName: string; userDepartment: string; totalScore: number; count: number }> = {};
 
-    bankAttempts.forEach(a => {
+    validBankAttempts.forEach(a => {
       if (!userStats[a.userId]) {
         userStats[a.userId] = {
           userId: a.userId,

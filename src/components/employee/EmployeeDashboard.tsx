@@ -11,8 +11,10 @@ import {
   AlertCircle,
   RotateCcw,
   Lock,
-  ChevronDown
+  ChevronDown,
+  Trophy
 } from 'lucide-react';
+import { BankRankingModal } from '../admin/BankRankingModal';
 
 interface EmployeeDashboardProps {
   currentUser: User;
@@ -35,6 +37,7 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 }) => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showArchived, setShowArchived] = useState(false);
+  const [showRankModal, setShowRankModal] = useState(false);
 
   // Filter attempts for this current employee
   const myAttempts = attempts.filter(a => a.userId === currentUser.id);
@@ -84,6 +87,14 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               Portal Ujian Karyawan & Evaluasi Kompetensi
             </p>
           </div>
+          
+          <button
+            onClick={() => setShowRankModal(true)}
+            className="hidden sm:flex shrink-0 items-center space-x-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
+          >
+            <Trophy className="w-4 h-4" />
+            <span>Ranking BANK</span>
+          </button>
         </div>
 
         {/* Stat Cards - Responsive Grid */}
@@ -100,10 +111,19 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
 
           <div className="bg-slate-50/50 dark:bg-zinc-950/60 border border-slate-100 dark:border-zinc-800 p-2.5 sm:p-4 rounded-xl text-center transition-colors duration-200">
             <div className="text-slate-400 dark:text-zinc-500 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider">Lulus</div>
-            <div className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1">{passedCount}</div>
+            <div className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 sm:mt-1">{passedCount}</div>
           </div>
         </div>
+
+        <button
+          onClick={() => setShowRankModal(true)}
+          className="w-full sm:hidden flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
+        >
+          <Trophy className="w-4 h-4" />
+          <span>Lihat Ranking BANK</span>
+        </button>
       </div>
+
 
       {/* VIEW MODE 1: AVAILABLE EXAMS CATALOG */}
       {activeTab === 'employee_dashboard' && (
@@ -329,6 +349,14 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {showRankModal && (
+        <BankRankingModal 
+          attempts={attempts} 
+          exams={exams} 
+          onClose={() => setShowRankModal(false)} 
+        />
       )}
 
     </div>
