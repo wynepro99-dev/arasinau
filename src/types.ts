@@ -43,6 +43,8 @@ export interface ExamPackage {
   status: 'active' | 'draft' | 'closed';
   authorName: string;
   scope?: 'BANK' | 'SEC' | 'ALL';
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface AttemptAnswer {

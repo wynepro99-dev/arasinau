@@ -189,7 +189,9 @@ function handleRealtimePayload(payload: any) {
         createdAt: newRow.created_at,
         status: newRow.status,
         authorName: newRow.author_name,
-        scope: newRow.scope || 'BANK'
+        scope: newRow.scope || 'BANK',
+        startTime: newRow.start_time,
+        endTime: newRow.end_time
       };
       const idx = memoryExams.findIndex(e => e.id === exam.id);
       if (idx > -1) memoryExams[idx] = exam;
@@ -298,7 +300,9 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
         createdAt: e.created_at,
         status: e.status,
         authorName: e.author_name,
-        scope: e.scope || 'BANK'
+        scope: e.scope || 'BANK',
+        startTime: e.start_time,
+        endTime: e.end_time
       }));
     }
 
@@ -634,7 +638,9 @@ export async function saveExam(exam: Omit<ExamPackage, 'id' | 'createdAt'> & { i
       created_at: saved.createdAt,
       status: saved.status,
       author_name: saved.authorName,
-      scope: saved.scope || 'BANK'
+      scope: saved.scope || 'BANK',
+      start_time: saved.startTime,
+      end_time: saved.endTime
     }, { onConflict: 'id' });
     if (error) {
       throw new Error(`Gagal menyimpan paket ujian ke database: ${error.message}`);

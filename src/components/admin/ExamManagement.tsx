@@ -51,6 +51,8 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
   const [passingScore, setPassingScore] = useState(75);
   const [status, setStatus] = useState<'active' | 'draft' | 'closed'>('active');
   const [scope, setScope] = useState<'BANK' | 'SEC' | 'ALL'>('BANK');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
 
   const isSuperAdmin = currentUser?.name.toLowerCase().includes('taka') ?? false;
 
@@ -78,6 +80,8 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     setPassingScore(75);
     setStatus('active');
     setScope('BANK');
+    setStartTime('');
+    setEndTime('');
     setIsModalOpen(true);
   };
 
@@ -90,6 +94,8 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     setPassingScore(exam.passingScore);
     setStatus(exam.status);
     setScope(exam.scope || 'BANK');
+    setStartTime(exam.startTime || '');
+    setEndTime(exam.endTime || '');
     setIsModalOpen(true);
   };
 
@@ -119,8 +125,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
     }
 
     try {
-      await saveExam({
-        id: editingExam?.id,
+      const examToSave: Omit<ExamPackage, 'id' | 'createdAt'> & { id?: string } = {
         title: title.trim(),
         description: description.trim(),
         category,
@@ -128,7 +133,14 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
         passingScore: Number(passingScore),
         status,
         scope,
-        authorName: editingExam?.authorName || currentUser?.name || 'Taka Ditya Darma'
+        authorName: editingExam?.authorName || currentUser?.name || 'Taka Ditya Darma',
+        startTime: startTime || undefined,
+        endTime: endTime || undefined
+      };
+
+      await saveExam({
+        ...examToSave,
+        id: editingExam?.id
       });
 
       onToast(editingExam ? 'Paket Ujian berhasil diperbarui!' : 'Paket Ujian baru berhasil dibuat!', 'success');
@@ -441,6 +453,27 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                     <option value="closed" className="dark:bg-zinc-900">Ditutup (Sesi Ditutup Admin)</option>
                     <option value="draft" className="dark:bg-zinc-900">Draft (Disembunyikan)</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Jadwal Mulai (Opsional)</label>
+                  <input
+                    type="datetime-local"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">Jadwal Selesai (Opsional)</label>
+                  <input
+                    type="datetime-local"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:bg-white dark:focus:bg-zinc-900"
+                  />
                 </div>
               </div>
 
