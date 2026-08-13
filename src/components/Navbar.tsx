@@ -8,7 +8,8 @@ import {
   Award,
   BookOpen,
   User as UserIcon,
-  Settings
+  Settings,
+  DownloadCloud
 } from 'lucide-react';
 import { ProfileSettingsModal } from './ProfileSettingsModal';
 
@@ -302,16 +303,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
             ) : (
-              <button
-                onClick={onOpenAuthModal}
-                className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 transition-all active:scale-95 whitespace-nowrap"
+              <a
+                href="/Ujian_ARA_Sinau.apk"
+                download="Ujian_ARA_Sinau.apk"
+                className="flex items-center space-x-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-md shadow-indigo-600/20 transition-all active:scale-95 whitespace-nowrap cursor-pointer"
               >
-                <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <DownloadCloud className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>
-                  <span className="inline sm:hidden">Masuk</span>
-                  <span className="hidden sm:inline">Masuk Sistem</span>
+                  <span className="inline sm:hidden">Download</span>
+                  <span className="hidden sm:inline">Download Apps</span>
                 </span>
-              </button>
+              </a>
             )}
 
           </div>

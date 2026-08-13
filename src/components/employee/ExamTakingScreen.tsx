@@ -229,6 +229,14 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
   const handleWriteEssay = (text: string) => {
     if (!currentQ) return;
     const existing = userAnswers[currentQ.id] || { answerId: '', essayText: '', isFlaggedDoubt: false };
+    
+    // Gboard/Keyboard Clipboard Injection Protection
+    const oldTextLength = existing.essayText?.length || 0;
+    if (text.length - oldTextLength > 3) {
+      onToast('🔒 Anti-Kecurangan Aktif: Input teks terlalu cepat (dicurigai hasil Paste dari keyboard). Anda wajib mengetik secara manual.', 'error');
+      return;
+    }
+
     setUserAnswers(prev => ({
       ...prev,
       [currentQ.id]: {
