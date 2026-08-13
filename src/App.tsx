@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { User, ExamPackage, Question, ExamAttempt } from './types';
 import { 
   initStorage, 
@@ -240,8 +241,11 @@ export default function App() {
         return (ex?.scope || 'BANK') === adminAllowedCompany;
       });
 
+  const isNative = Capacitor.isNativePlatform();
+  const isGuestMobile = !currentUser && isNative;
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+    <div className={`min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-zinc-100 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white transition-colors duration-200 ${isGuestMobile ? 'h-screen overflow-hidden' : ''}`}>
       
       {/* Loading Screen Overlay */}
       {showLoading && (
@@ -257,18 +261,20 @@ export default function App() {
         </div>
       )}
       
-      {/* Top Navbar */}
-      <Navbar
-        currentUser={currentUser}
-        onSelectUser={handleSelectUser}
-        onOpenAuthModal={() => setIsAuthOpen(true)}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onToast={showToast}
-      />
+      {/* Top Navbar - Hide on mobile login screen */}
+      {!isGuestMobile && (
+        <Navbar
+          currentUser={currentUser}
+          onSelectUser={handleSelectUser}
+          onOpenAuthModal={() => setIsAuthOpen(true)}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onToast={showToast}
+        />
+      )}
 
       {/* Main Container Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6">
+      <main className={`flex-1 w-full mx-auto ${isGuestMobile ? 'p-0 flex flex-col justify-center' : 'max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6'}`}>
         
         {/* If taking an active live exam */}
         {activeTakingExam && currentUser ? (

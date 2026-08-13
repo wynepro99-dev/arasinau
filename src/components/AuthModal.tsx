@@ -167,7 +167,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const content = (
-    <div className="w-full max-w-md mx-auto bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-150 animate-scale-in">
+    <div className="w-full bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-zinc-150 animate-scale-in">
       
       {/* Brand Top Header */}
       <div className="p-4 sm:p-6 pb-4 sm:pb-5 text-center bg-gradient-to-b from-indigo-50/70 to-white dark:from-zinc-800/40 dark:to-zinc-900 border-b border-slate-100 dark:border-zinc-800 relative">
@@ -354,8 +354,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (isInlineScreen) {
     return (
-      <div className="py-8 px-4 flex items-center justify-center min-h-[75vh]">
-        {content}
+      <div className="w-full h-full flex flex-col items-center justify-center p-4 overflow-y-auto">
+        <div className="w-full max-w-md my-auto">
+          {content}
+        </div>
       </div>
     );
   }
