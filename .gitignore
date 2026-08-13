@@ -11,3 +11,5 @@ coverage/
 *.apk
 *.jks
 .idea/
+
+!public/Ujian_ARA_Sinau.apk
