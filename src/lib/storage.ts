@@ -321,7 +321,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
     }
 
     // 5. Fetch attempts (Limit 2000 to prevent huge egress on large tables)
-    const { data: attData, error: attErr } = await client.from('exam_attempts').select('*').order('created_at', { ascending: false }).limit(2000);
+    // Using completed_at instead of created_at because created_at might be missing from the schema in production.
+    const { data: attData, error: attErr } = await client.from('exam_attempts').select('*').order('completed_at', { ascending: false }).limit(2000);
     if (!attErr && attData) {
       memoryAttempts = attData.map((a: any) => ({
         id: a.id,
