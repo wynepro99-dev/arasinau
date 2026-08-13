@@ -348,8 +348,8 @@ export default function App() {
               <ModulesDashboard currentUser={currentUser} onToast={showToast} />
             )}
 
-            {/* EMPLOYEE PANELS */}
-            {currentUser && (currentUser.role === 'karyawan' || (currentUser.role === 'egi' && activeTab.startsWith('employee'))) && (
+            {/* EMPLOYEE PANELS (Karyawan / EGI) */}
+            {currentUser && currentUser.role !== 'admin' && (activeTab === 'employee_dashboard' || activeTab === 'employee_history') && (
               <EmployeeDashboard
                 currentUser={currentUser}
                 exams={exams}
