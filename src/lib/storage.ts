@@ -37,11 +37,11 @@ export function getUserUsername(user: User): string {
 function saveSessionUser(user: User | null) {
   memoryCurrentUser = user;
   try {
-    if (typeof window !== 'undefined' && window.sessionStorage) {
+    if (typeof window !== 'undefined' && window.localStorage) {
       if (user) {
-        sessionStorage.setItem('ara_session_user', JSON.stringify({ id: user.id }));
+        localStorage.setItem('ara_session_user', JSON.stringify({ id: user.id }));
       } else {
-        sessionStorage.removeItem('ara_session_user');
+        localStorage.removeItem('ara_session_user');
       }
     }
   } catch (e) {
@@ -52,8 +52,8 @@ function saveSessionUser(user: User | null) {
 export async function initStorage() {
   if (typeof window === 'undefined') return;
   try {
-    if (window.sessionStorage) {
-      const sess = sessionStorage.getItem('ara_session_user');
+    if (window.localStorage) {
+      const sess = localStorage.getItem('ara_session_user');
       if (sess) {
         const parsed = JSON.parse(sess);
         if (parsed && parsed.id) {
@@ -80,7 +80,7 @@ export async function initStorage() {
               };
             } else {
               memoryCurrentUser = null;
-              sessionStorage.removeItem('ara_session_user');
+              localStorage.removeItem('ara_session_user');
             }
           }
         }
@@ -132,8 +132,8 @@ export function startSupabaseAutoSync(onDataChange?: () => void) {
   if (client) {
     try {
       realtimeChannel = client.channel('public:db-changes')
-        .on('postgres_changes', { event: '*', schema: 'public' }, async () => {
-          await syncFromSupabase();
+        .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+          handleRealtimePayload(payload);
           if (onDataChange) onDataChange();
         })
         .subscribe();
@@ -142,13 +142,111 @@ export function startSupabaseAutoSync(onDataChange?: () => void) {
     }
   }
 
-  // Background polling every 8 seconds as robust fallback
-  autoSyncInterval = setInterval(async () => {
-    const res = await syncFromSupabase();
-    if (res.success && onDataChange) {
-      onDataChange();
+  // Background polling (dinonaktifkan karena menyebabkan limit Supabase cepat habis)
+  // autoSyncInterval = setInterval(async () => {
+  //   const res = await syncFromSupabase();
+  //   if (res.success && onDataChange) {
+  //     onDataChange();
+  //   }
+  // }, 8000);
+}
+
+function handleRealtimePayload(payload: any) {
+  const table = payload.table;
+  const eventType = payload.eventType; // 'INSERT', 'UPDATE', 'DELETE'
+  const newRow = payload.new;
+  const oldRow = payload.old;
+
+  if (table === 'users') {
+    if (eventType === 'INSERT' || eventType === 'UPDATE') {
+      const user = {
+        id: newRow.id,
+        name: newRow.name,
+        email: newRow.email,
+        password: newRow.password || '123456',
+        role: newRow.role,
+        department: newRow.department,
+        avatar: newRow.avatar,
+        company: newRow.company || 'BANK'
+      };
+      const idx = memoryUsers.findIndex(u => u.id === user.id);
+      if (idx > -1) memoryUsers[idx] = user;
+      else memoryUsers.push(user);
+    } else if (eventType === 'DELETE' && oldRow?.id) {
+      memoryUsers = memoryUsers.filter(u => u.id !== oldRow.id);
     }
-  }, 8000);
+  }
+
+  if (table === 'exam_packages') {
+    if (eventType === 'INSERT' || eventType === 'UPDATE') {
+      const exam = {
+        id: newRow.id,
+        title: newRow.title,
+        description: newRow.description,
+        category: newRow.category,
+        durationMinutes: newRow.duration_minutes,
+        passingScore: newRow.passing_score,
+        createdAt: newRow.created_at,
+        status: newRow.status,
+        authorName: newRow.author_name,
+        scope: newRow.scope || 'BANK'
+      };
+      const idx = memoryExams.findIndex(e => e.id === exam.id);
+      if (idx > -1) memoryExams[idx] = exam;
+      else memoryExams.push(exam);
+    } else if (eventType === 'DELETE' && oldRow?.id) {
+      memoryExams = memoryExams.filter(e => e.id !== oldRow.id);
+    }
+  }
+
+  if (table === 'questions') {
+    if (eventType === 'INSERT' || eventType === 'UPDATE') {
+      const q = {
+        id: newRow.id,
+        examId: newRow.exam_id,
+        type: newRow.type,
+        questionText: newRow.question_text,
+        options: typeof newRow.options === 'string' ? JSON.parse(newRow.options) : (newRow.options || []),
+        correctAnswerId: newRow.correct_answer_id,
+        explanation: newRow.explanation,
+        points: newRow.points,
+        caseStudyStory: newRow.case_study_story || '',
+        sampleAnswer: newRow.sample_answer || '',
+        scope: newRow.scope || 'BANK'
+      };
+      const idx = memoryQuestions.findIndex(qItem => qItem.id === q.id);
+      if (idx > -1) memoryQuestions[idx] = q;
+      else memoryQuestions.push(q);
+    } else if (eventType === 'DELETE' && oldRow?.id) {
+      memoryQuestions = memoryQuestions.filter(qItem => qItem.id !== oldRow.id);
+    }
+  }
+
+  if (table === 'exam_attempts') {
+    if (eventType === 'INSERT' || eventType === 'UPDATE') {
+      const att = {
+        id: newRow.id,
+        examId: newRow.exam_id,
+        userId: newRow.user_id,
+        userName: newRow.user_name,
+        userDepartment: newRow.user_department,
+        examTitle: newRow.exam_title,
+        score: Number(newRow.score),
+        totalPointsEarned: newRow.total_points_earned,
+        totalMaxPoints: newRow.total_max_points,
+        passed: newRow.passed,
+        startedAt: newRow.started_at,
+        completedAt: newRow.completed_at,
+        durationSecondsUsed: newRow.duration_seconds_used,
+        answers: typeof newRow.answers === 'string' ? JSON.parse(newRow.answers) : newRow.answers
+      };
+      const idx = memoryAttempts.findIndex(a => a.id === att.id);
+      if (idx > -1) memoryAttempts[idx] = att;
+      else memoryAttempts.push(att);
+    } else if (eventType === 'DELETE' && oldRow?.id) {
+      memoryAttempts = memoryAttempts.filter(a => a.id !== oldRow.id);
+    }
+  }
 }
 
 // --- SUPABASE SYNC OPERATIONS ---
@@ -222,8 +320,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
       }));
     }
 
-    // 5. Fetch attempts
-    const { data: attData, error: attErr } = await client.from('exam_attempts').select('*');
+    // 5. Fetch attempts (Limit 2000 to prevent huge egress on large tables)
+    const { data: attData, error: attErr } = await client.from('exam_attempts').select('*').order('created_at', { ascending: false }).limit(2000);
     if (!attErr && attData) {
       memoryAttempts = attData.map((a: any) => ({
         id: a.id,

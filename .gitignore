@@ -6,3 +6,8 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Exclude APK and keystores
+*.apk
+*.jks
+.idea/
