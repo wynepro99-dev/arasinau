@@ -453,6 +453,9 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                     <option value="closed" className="dark:bg-zinc-900">Ditutup (Sesi Ditutup Admin)</option>
                     <option value="draft" className="dark:bg-zinc-900">Draft (Disembunyikan)</option>
                   </select>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    *Pilih <b>Aktif</b> agar sistem dapat membuka/menutup ujian otomatis sesuai jadwal.
+                  </p>
                 </div>
               </div>
 

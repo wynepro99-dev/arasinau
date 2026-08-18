@@ -180,8 +180,10 @@ export const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
               const prevAttempt = myAttempts.find(a => a.examId === exam.id);
               
               const now = new Date();
-              const isNotYetOpen = exam.startTime ? now < new Date(exam.startTime) : false;
-              const isPastClose = exam.endTime ? now > new Date(exam.endTime) : false;
+              const parseDateSafe = (dStr: string) => new Date(dStr.length === 16 ? dStr + ':00' : dStr);
+              
+              const isNotYetOpen = exam.startTime ? now < parseDateSafe(exam.startTime) : false;
+              const isPastClose = exam.endTime ? now > parseDateSafe(exam.endTime) : false;
               
               const isClosed = exam.status === 'closed' || isPastClose;
               const isScheduleLocked = isNotYetOpen || isPastClose;
