@@ -71,7 +71,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exa
     });
 
     const ranked = Object.values(userStats)
-      .filter(u => u.count > 0)
+      .filter(u => u.count > 0 && !u.userName.toLowerCase().includes('taka'))
       .sort((a, b) => {
         if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
         return b.count - a.count;
