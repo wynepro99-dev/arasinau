@@ -32,7 +32,6 @@ export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exa
       userDepartment: string; 
       totalScore: number; 
       count: number;
-      authoredCount: number;
     }> = {};
 
     users.forEach(u => {
@@ -41,8 +40,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exa
         userName: u.name,
         userDepartment: u.department || 'Lainnya',
         totalScore: 0,
-        count: 0,
-        authoredCount: 0
+        count: 0
       };
     });
 
@@ -53,21 +51,11 @@ export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exa
           userName: a.userName,
           userDepartment: a.userDepartment || 'Lainnya',
           totalScore: 0,
-          count: 0,
-          authoredCount: 0
+          count: 0
         };
       }
       userStats[a.userId].totalScore += a.score;
       userStats[a.userId].count += 1;
-    });
-
-    scopeExams.forEach(exam => {
-      const author = users.find(u => u.name === exam.authorName);
-      if (author && userStats[author.id]) {
-        userStats[author.id].totalScore += 100;
-        userStats[author.id].count += 1;
-        userStats[author.id].authoredCount += 1;
-      }
     });
 
     const ranked = Object.values(userStats)
@@ -109,7 +97,7 @@ export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exa
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
             <div className="text-sm text-blue-800 dark:text-blue-300">
               <strong className="font-bold">Info Perhitungan Peringkat:</strong>
-              <p className="mt-1 text-xs">Peringkat diurutkan berdasarkan Total Poin. Karyawan yang berstatus sebagai <strong>Pembuat Ujian</strong> secara otomatis mendapatkan kompensasi poin penuh (100) untuk setiap paket ujian yang mereka buat (dihitung sebagai selesai), sehingga ranking tetap adil.</p>
+              <p className="mt-1 text-xs">Peringkat diurutkan berdasarkan Total Poin dari ujian yang telah diselesaikan.</p>
             </div>
           </div>
 
@@ -136,11 +124,6 @@ export const RankingModal: React.FC<RankingModalProps> = ({ scope, attempts, exa
                       </td>
                       <td className="px-5 py-4">
                         <div className="font-bold text-slate-800 dark:text-white">{r.userName}</div>
-                        {r.authoredCount > 0 && (
-                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-                            + {r.authoredCount} Ujian sebagai Pembuat
-                          </div>
-                        )}
                       </td>
                       <td className="px-5 py-4">
                         <span className="px-2.5 py-1 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg text-xs font-medium">
