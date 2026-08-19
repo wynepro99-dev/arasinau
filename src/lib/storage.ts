@@ -214,7 +214,8 @@ function handleRealtimePayload(payload: any) {
         points: newRow.points,
         caseStudyStory: newRow.case_study_story || '',
         sampleAnswer: newRow.sample_answer || '',
-        scope: newRow.scope || 'BANK'
+        scope: newRow.scope || 'BANK',
+        createdAt: newRow.created_at
       };
       const idx = memoryQuestions.findIndex(qItem => qItem.id === q.id);
       if (idx > -1) memoryQuestions[idx] = q;
@@ -320,7 +321,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
         points: q.points,
         caseStudyStory: q.case_study_story || '',
         sampleAnswer: q.sample_answer || '',
-        scope: q.scope || 'BANK'
+        scope: q.scope || 'BANK',
+        createdAt: q.created_at
       }));
     }
 
@@ -411,7 +413,8 @@ export async function seedSupabaseDatabase(): Promise<{ success: boolean; messag
       points: q.points,
       case_study_story: q.caseStudyStory || '',
       sample_answer: q.sampleAnswer || '',
-      scope: q.scope || 'BANK'
+      scope: q.scope || 'BANK',
+      created_at: q.createdAt || new Date().toISOString()
     }));
     if (formattedQuestions.length > 0) {
       await client.from('questions').upsert(formattedQuestions, { onConflict: 'id' });
@@ -735,7 +738,8 @@ export async function saveQuestion(question: Omit<Question, 'id'> & { id?: strin
       points: saved.points,
       case_study_story: saved.caseStudyStory || '',
       sample_answer: saved.sampleAnswer || '',
-      scope: saved.scope || 'BANK'
+      scope: saved.scope || 'BANK',
+      created_at: saved.createdAt || new Date().toISOString()
     }, { onConflict: 'id' });
     if (error) {
       throw new Error(`Gagal menyimpan soal ke database: ${error.message}`);

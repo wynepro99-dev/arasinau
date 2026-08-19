@@ -458,6 +458,11 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                             Scope: {q.scope || 'BANK'}
                           </span>
                           <span className="text-[10px] font-semibold text-slate-400">• {q.points} Poin</span>
+                          {q.createdAt && (
+                            <span className="text-[10px] font-semibold text-slate-400">
+                              • Dibuat: {new Date(q.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          )}
                         </div>
 
                         {q.type === 'case_study' && q.caseStudyStory && (

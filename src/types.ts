@@ -30,6 +30,7 @@ export interface Question {
   caseStudyStory?: string; // Cerita/skenario/narasi studi kasus
   sampleAnswer?: string; // Acuan kunci jawaban / rubrik penilaian essay
   scope?: 'BANK' | 'SEC' | 'ALL';
+  createdAt?: string; // Tanggal soal dibuat
 }
 
 export interface ExamPackage {
