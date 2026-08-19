@@ -279,6 +279,9 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                     Pembuat Soal: {exam.authorName}
                   </div>
                 )}
+                <div className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium mt-1 flex items-center">
+                  Dibuat pada: {new Date(exam.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </div>
                 <p className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 mt-2 leading-relaxed">
                   {exam.description}
                 </p>
