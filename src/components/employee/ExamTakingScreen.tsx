@@ -504,7 +504,7 @@ export const ExamTakingScreen: React.FC<ExamTakingScreenProps> = ({
                         : []);
                   return safeOptions.map((opt, idx) => {
                     if (!opt) return null;
-                    const letters = ['A', 'B', 'C', 'D'];
+                    const letters = ['A', 'B', 'C', 'D', 'E'];
                     const isSelected = userAnswers[currentQ.id]?.answerId === opt.id;
 
                     return (
