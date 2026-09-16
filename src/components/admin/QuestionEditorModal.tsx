@@ -618,32 +618,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
               {/* Options Section */}
               {questionType === 'multiple_choice' ? (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-semibold text-slate-700">Pilihan Jawaban &amp; Kunci Jawaban Benar</label>
-                    {options.length === 4 ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOptions([...options, { id: 'opt-e', text: '' }]);
-                        }}
-                        className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all"
-                      >
-                        + Tambah Opsi E
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newOpts = options.slice(0, 4);
-                          setOptions(newOpts);
-                          if (correctAnswerId === 'opt-e') setCorrectAnswerId('opt-a');
-                        }}
-                        className="text-[10px] font-bold px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-100 transition-all"
-                      >
-                        − Hapus Opsi E
-                      </button>
-                    )}
-                  </div>
+                  <label className="block text-xs font-semibold text-slate-700">Pilihan Jawaban &amp; Kunci Jawaban Benar</label>
                   {options.map((opt, idx) => {
                     const letters = ['A', 'B', 'C', 'D', 'E'];
                     const isSelectedKey = correctAnswerId === opt.id;
@@ -655,8 +630,6 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                           className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
                             isSelectedKey
                               ? 'bg-emerald-600 text-white shadow-md'
-                              : idx === 4
-                              ? 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
                               : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                           }`}
                           title="Tandai sebagai Kunci Jawaban"
@@ -674,7 +647,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                             setOptions(newOpts);
                           }}
                           className={`flex-1 px-3 py-1.5 bg-slate-50 border rounded-xl text-xs text-slate-900 focus:outline-none ${
-                            isSelectedKey ? 'border-emerald-500 bg-emerald-50/30' : idx === 4 ? 'border-indigo-300 bg-indigo-50/20' : 'border-slate-200'
+                            isSelectedKey ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200'
                           }`}
                         />
                       </div>
