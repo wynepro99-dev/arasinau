@@ -83,7 +83,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
       }
 
       // Option detection (e.g. "A. ..." or "A) ...")
-      const optMatch = line.match(/^([A-D])[\.\)]\s+(.*)$/i);
+      const optMatch = line.match(/^([A-E])[\.\)]\s+(.*)$/i);
       if (optMatch && currentQuestion) {
         const letter = optMatch[1].toUpperCase();
         currentQuestion.options.push({
@@ -199,7 +199,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
           };
           continue;
         }
-        const optMatch = line.match(/^([A-D])[\.\)]\s+(.*)$/i);
+        const optMatch = line.match(/^([A-E])[\.\)]\s+(.*)$/i);
         if (optMatch && currentQuestion) {
           const letter = optMatch[1].toUpperCase();
           currentQuestion.options.push({
@@ -211,7 +211,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
         const keyMatch = line.match(/^(?:Kunci Jawaban|Kunci|Jawaban)\s*:\s*(.*)$/i);
         if (keyMatch && currentQuestion) {
           const keyVal = keyMatch[1].trim();
-          if (/^[A-D]$/i.test(keyVal)) {
+          if (/^[A-E]$/i.test(keyVal)) {
             currentQuestion.type = 'multiple_choice';
             currentQuestion.correctAnswerId = `opt-${keyVal.toLowerCase()}`;
           } else if (/^(?:Benar|Salah|True|False)$/i.test(keyVal)) {
@@ -304,7 +304,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
     if (questionType === 'multiple_choice') {
       const emptyOpt = options.find(o => !o.text.trim());
       if (emptyOpt) {
-        onToast('Seluruh 4 opsi jawaban pilihan ganda wajib diisi.', 'error');
+        onToast(`Seluruh ${options.length} opsi jawaban pilihan ganda wajib diisi.`, 'error');
         return;
       }
     }
@@ -556,7 +556,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                     }}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
                   >
-                    <option value="multiple_choice">Pilihan Ganda (A, B, C, D)</option>
+                    <option value="multiple_choice">Pilihan Ganda (A, B, C, D, E)</option>
                     <option value="true_false">Benar / Salah (True / False)</option>
                     <option value="essay">Soal Essay / Uraian</option>
                     <option value="case_study">Studi Kasus (Cerita / Skenario & Essay)</option>
@@ -637,9 +637,34 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
               {/* Options Section */}
               {questionType === 'multiple_choice' ? (
                 <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-slate-700">Pilihan Jawaban & Kunci Jawaban Benar</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-slate-700">Pilihan Jawaban &amp; Kunci Jawaban Benar</label>
+                    {options.length === 4 ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOptions([...options, { id: 'opt-e', text: '' }]);
+                        }}
+                        className="text-[10px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-all"
+                      >
+                        + Tambah Opsi E
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newOpts = options.slice(0, 4);
+                          setOptions(newOpts);
+                          if (correctAnswerId === 'opt-e') setCorrectAnswerId('opt-a');
+                        }}
+                        className="text-[10px] font-bold px-2.5 py-1 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-100 transition-all"
+                      >
+                        − Hapus Opsi E
+                      </button>
+                    )}
+                  </div>
                   {options.map((opt, idx) => {
-                    const letters = ['A', 'B', 'C', 'D'];
+                    const letters = ['A', 'B', 'C', 'D', 'E'];
                     const isSelectedKey = correctAnswerId === opt.id;
                     return (
                       <div key={opt.id} className="flex items-center space-x-2">
@@ -649,6 +674,8 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                           className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
                             isSelectedKey
                               ? 'bg-emerald-600 text-white shadow-md'
+                              : idx === 4
+                              ? 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
                               : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                           }`}
                           title="Tandai sebagai Kunci Jawaban"
@@ -666,7 +693,7 @@ export const QuestionEditorModal: React.FC<QuestionEditorModalProps> = ({
                             setOptions(newOpts);
                           }}
                           className={`flex-1 px-3 py-1.5 bg-slate-50 border rounded-xl text-xs text-slate-900 focus:outline-none ${
-                            isSelectedKey ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200'
+                            isSelectedKey ? 'border-emerald-500 bg-emerald-50/30' : idx === 4 ? 'border-indigo-300 bg-indigo-50/20' : 'border-slate-200'
                           }`}
                         />
                       </div>
