@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { User, ExamPackage, Question } from '../../types';
 import { saveExam, deleteExam, clearAllExams } from '../../lib/storage';
+import { analyticsDownload, describeAnalyticsError } from '../../lib/analyticsApi';
+import {
+  ANALYTICS_ENDPOINTS,
+  QUERY_KEYS,
+  canDownloadExamQuestions,
+  canViewExamAnalytics,
+  isSuperAdminUser
+} from '../../lib/analytics/contract';
+import { localDateStamp, safeFilePart } from './analytics/format';
 import { 
   Plus, 
   Search, 
@@ -17,7 +26,13 @@ import {
   Lock,
   Unlock,
   Play,
-  PauseCircle
+  PauseCircle,
+  FileDown,
+  FileSpreadsheet,
+  KeyRound,
+  ChevronDown,
+  BarChart3,
+  Loader2
 } from 'lucide-react';
 
 interface ExamManagementProps {
@@ -27,7 +42,141 @@ interface ExamManagementProps {
   onRefresh: () => void;
   onManageQuestions: (exam: ExamPackage) => void;
   onToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
+  onViewAnalytics?: (exam: ExamPackage) => void;
 }
+
+interface ExamCardAnalyticsActionsProps {
+  exam: ExamPackage;
+  currentUser: User | null;
+  onViewAnalytics?: (exam: ExamPackage) => void;
+  onToast: (msg: string, type?: 'success' | 'info' | 'error') => void;
+}
+
+const EXTRA_ACTION_BTN =
+  'w-full py-1.5 px-3 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-950 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center justify-center gap-1.5';
+const MENU_ITEM_BTN =
+  'w-full px-3 py-2 rounded-lg text-left text-xs font-medium text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 whitespace-nowrap transition-colors flex items-center gap-2';
+
+/** Baris aksi tambahan di kartu paket: Download Soal (tanpa / dengan kunci) & Lihat Analisis. */
+const ExamCardAnalyticsActions: React.FC<ExamCardAnalyticsActionsProps> = ({
+  exam,
+  currentUser,
+  onViewAnalytics,
+  onToast
+}) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
+
+  // Menu tertutup saat klik / fokus di luar menu atau tekan Escape
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const closeIfOutside = (e: Event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setIsMenuOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', closeIfOutside);
+    document.addEventListener('focusin', closeIfOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', closeIfOutside);
+      document.removeEventListener('focusin', closeIfOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  const canDownload = canDownloadExamQuestions(currentUser, exam);
+  const canOpenAnalytics = !!onViewAnalytics && canViewExamAnalytics(currentUser, exam);
+  if (!canDownload && !canOpenAnalytics) return null;
+
+  const handleDownload = async (withKey: boolean) => {
+    setIsMenuOpen(false);
+    triggerRef.current?.focus();
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const fallbackName = `Soal_${safeFilePart(exam.title)}_${localDateStamp()}${withKey ? '_DenganKunci' : ''}.xlsx`;
+      const fileName = await analyticsDownload(
+        ANALYTICS_ENDPOINTS.questionSheet(exam.id),
+        { [QUERY_KEYS.withKey]: withKey ? 1 : undefined },
+        fallbackName
+      );
+      onToast(
+        `Soal ${withKey ? 'dengan' : 'tanpa'} kunci jawaban berhasil diunduh: ${fileName}`,
+        'success'
+      );
+    } catch (err) {
+      onToast(describeAnalyticsError(err), 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-stretch gap-2">
+      {canDownload && (
+        <div ref={wrapperRef} className="relative flex-1 min-w-fit">
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => {
+              if (!downloading) setIsMenuOpen((open) => !open);
+            }}
+            aria-expanded={isMenuOpen}
+            aria-controls={isMenuOpen ? menuId : undefined}
+            aria-disabled={downloading || undefined}
+            aria-busy={downloading || undefined}
+            className={`${EXTRA_ACTION_BTN} ${downloading ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            {downloading ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            )}
+            <span>{downloading ? 'Mengunduh...' : 'Download Soal'}</span>
+            {!downloading && (
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+            )}
+          </button>
+
+          {isMenuOpen && (
+            <div
+              id={menuId}
+              role="group"
+              aria-label="Pilihan Download Soal"
+              className="absolute left-0 top-full mt-1 z-20 w-max min-w-full p-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg"
+            >
+              <button type="button" onClick={() => handleDownload(false)} className={MENU_ITEM_BTN}>
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Tanpa Kunci Jawaban</span>
+              </button>
+              <button type="button" onClick={() => handleDownload(true)} className={MENU_ITEM_BTN}>
+                <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>Dengan Kunci Jawaban</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {canOpenAnalytics && (
+        <div className="flex-1 min-w-fit">
+          <button type="button" onClick={() => onViewAnalytics?.(exam)} className={EXTRA_ACTION_BTN}>
+            <BarChart3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>Lihat Analisis</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const ExamManagement: React.FC<ExamManagementProps> = ({
   currentUser,
@@ -35,7 +184,8 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
   questions,
   onRefresh,
   onManageQuestions,
-  onToast
+  onToast,
+  onViewAnalytics
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -54,7 +204,7 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
-  const isSuperAdmin = currentUser?.name.toLowerCase().includes('taka') ?? false;
+  const isSuperAdmin = isSuperAdminUser(currentUser);
 
   const userExams = exams.filter(e => {
     if (isSuperAdmin) return true;
@@ -365,6 +515,14 @@ export const ExamManagement: React.FC<ExamManagementProps> = ({
                     </>
                   )}
                 </button>
+
+                {/* Download Soal & Lihat Analisis */}
+                <ExamCardAnalyticsActions
+                  exam={exam}
+                  currentUser={currentUser}
+                  onViewAnalytics={onViewAnalytics}
+                  onToast={onToast}
+                />
               </div>
 
             </div>

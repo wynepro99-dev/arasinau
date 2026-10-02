@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { User, UserRole } from '../types';
 import { getUsers, registerUser, getUserUsername } from '../lib/storage';
 import { getSupabaseClient } from '../lib/supabase';
+import { normalizeUserRole } from '../lib/analytics/contract';
 import { LOGO_URL } from './Navbar';
 import { X, Lock, Mail, User as UserIcon, ArrowRight, CheckCircle2 } from 'lucide-react';
 
@@ -102,15 +103,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
 
         if (dbUser) {
+          const normalized = normalizeUserRole(dbUser.role);
           latestUser = {
             id: dbUser.id,
             name: dbUser.name,
             email: dbUser.email,
             password: dbUser.password || '123456',
-            role: dbUser.role,
+            role: normalized.role,
             department: dbUser.department,
             avatar: dbUser.avatar,
-            company: dbUser.company || 'BANK'
+            company: dbUser.company || 'BANK',
+            isSuperAdmin: normalized.isSuperAdmin
           };
         }
       } catch (e: any) {

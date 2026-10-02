@@ -9,6 +9,7 @@ export interface User {
   department: string;
   avatar?: string;
   company?: 'BANK' | 'SEC' | 'ALL'; // BANK = Bank, SEC = Bimbel, ALL = Both
+  isSuperAdmin?: boolean; // true bila users.role di database = 'super_admin' (role di memori tetap 'admin')
 }
 
 export type QuestionType = 'multiple_choice' | 'true_false' | 'case_study' | 'essay';

@@ -1,6 +1,7 @@
 import { User, ExamPackage, Question, ExamAttempt, ExamWithQuestions, LearningModule } from '../types';
 import { INITIAL_USERS, INITIAL_EXAMS, INITIAL_QUESTIONS, INITIAL_ATTEMPTS } from '../data/mockData';
 import { getSupabaseClient } from './supabase';
+import { normalizeUserRole } from './analytics/contract';
 
 // In-Memory Database Store (Tanpa keharusan localStorage)
 let memoryUsers: User[] = [...INITIAL_USERS];
@@ -66,7 +67,7 @@ export async function initStorage() {
               .maybeSingle();
 
             if (!error && data) {
-              let overrideRole = data.role;
+              const { role: overrideRole, isSuperAdmin } = normalizeUserRole(data.role);
 
               memoryCurrentUser = {
                 id: data.id,
@@ -76,7 +77,8 @@ export async function initStorage() {
                 role: overrideRole,
                 department: data.department,
                 avatar: data.avatar,
-                company: data.company || 'BANK'
+                company: data.company || 'BANK',
+                isSuperAdmin
               };
             } else {
               memoryCurrentUser = null;
@@ -159,15 +161,17 @@ function handleRealtimePayload(payload: any) {
 
   if (table === 'users') {
     if (eventType === 'INSERT' || eventType === 'UPDATE') {
+      const { role: normalizedRole, isSuperAdmin } = normalizeUserRole(newRow.role);
       const user = {
         id: newRow.id,
         name: newRow.name,
         email: newRow.email,
         password: newRow.password || '123456',
-        role: newRow.role,
+        role: normalizedRole,
         department: newRow.department,
         avatar: newRow.avatar,
-        company: newRow.company || 'BANK'
+        company: newRow.company || 'BANK',
+        isSuperAdmin
       };
       const idx = memoryUsers.findIndex(u => u.id === user.id);
       if (idx > -1) memoryUsers[idx] = user;
@@ -269,7 +273,7 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
     if (!usersErr && usersData && usersData.length > 0) {
       // Map Supabase rows directly to memoryUsers
       memoryUsers = usersData.map((u: any) => {
-        let overrideRole = u.role;
+        const { role: overrideRole, isSuperAdmin } = normalizeUserRole(u.role);
 
         return {
           id: u.id,
@@ -279,7 +283,8 @@ export async function syncFromSupabase(): Promise<{ success: boolean; message: s
           role: overrideRole,
           department: u.department,
           avatar: u.avatar,
-          company: u.company || 'BANK'
+          company: u.company || 'BANK',
+          isSuperAdmin
         };
       });
     } else if (!usersErr && (!usersData || usersData.length === 0)) {
@@ -572,15 +577,17 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
     if (error) throw new Error(`Gagal menyimpan perubahan ke database: ${error.message}`);
     if (!data) throw new Error('Data user tidak ditemukan di database Supabase.');
 
+    const normalized = normalizeUserRole(data.role);
     dbResult = {
       id: data.id,
       name: data.name,
       email: data.email,
       password: data.password || '123456',
-      role: data.role,
+      role: normalized.role,
       department: data.department,
       avatar: data.avatar,
-      company: data.company || 'BANK'
+      company: data.company || 'BANK',
+      isSuperAdmin: normalized.isSuperAdmin
     };
   }
 

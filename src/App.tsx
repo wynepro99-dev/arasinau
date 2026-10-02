@@ -18,7 +18,8 @@ import { AuthModal } from './components/AuthModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { ExamManagement } from './components/admin/ExamManagement';
 import { QuestionEditorModal } from './components/admin/QuestionEditorModal';
-import { ScoresDashboard } from './components/admin/ScoresDashboard';
+import { ScoresAnalyticsTabs } from './components/admin/analytics/ScoresAnalyticsTabs';
+import { isSuperAdminUser } from './lib/analytics/contract';
 import { EmployeeDashboard } from './components/employee/EmployeeDashboard';
 import { ExamTakingScreen } from './components/employee/ExamTakingScreen';
 import { ExamResultModal } from './components/employee/ExamResultModal';
@@ -57,6 +58,7 @@ export default function App() {
   const [activeQuestionExam, setActiveQuestionExam] = useState<ExamPackage | null>(null);
   const [activeTakingExam, setActiveTakingExam] = useState<ExamPackage | null>(null);
   const [activeResultAttempt, setActiveResultAttempt] = useState<ExamAttempt | null>(null);
+  const [analyticsFocusExamId, setAnalyticsFocusExamId] = useState<string | null>(null);
   
   // Loading Screen State
   const [showLoading, setShowLoading] = useState(true);
@@ -232,7 +234,7 @@ export default function App() {
     setActiveTakingExam(exam);
   };
 
-  const isSuperAdmin = currentUser?.name.toLowerCase().includes('taka') ?? false;
+  const isSuperAdmin = isSuperAdminUser(currentUser);
   const adminAllowedCompany = currentUser?.company || 'BANK';
   const visibleAttemptsForAdmin = (adminAllowedCompany === 'ALL' || isSuperAdmin) 
     ? attempts 
@@ -316,16 +318,22 @@ export default function App() {
                     onRefresh={loadData}
                     onManageQuestions={(exam) => setActiveQuestionExam(exam)}
                     onToast={showToast}
+                    onViewAnalytics={(exam) => {
+                      setAnalyticsFocusExamId(exam.id);
+                      setActiveTab('scores');
+                    }}
                   />
                 )}
 
                 {activeTab === 'scores' && (
-                  <ScoresDashboard
+                  <ScoresAnalyticsTabs
                     currentUser={currentUser!}
                     attempts={visibleAttemptsForAdmin}
                     exams={exams}
                     onRefresh={loadData}
                     onToast={showToast}
+                    focusExamId={analyticsFocusExamId}
+                    onFocusHandled={() => setAnalyticsFocusExamId(null)}
                   />
                 )}
 

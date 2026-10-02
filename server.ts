@@ -2,12 +2,17 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
+import { createAnalyticsRouter } from "./server/analytics";
+import { ANALYTICS_API_PREFIX } from "./src/lib/analytics/contract";
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
+
+  // Exam Analytics + Download Soal (read-only; autentikasi, role & company scope dicek di server)
+  app.use(ANALYTICS_API_PREFIX, createAnalyticsRouter({}));
 
   // API Health Check
   app.get("/api/health", (req, res) => {
