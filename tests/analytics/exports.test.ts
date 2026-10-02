@@ -425,8 +425,8 @@ function makeSummary(partial: Partial<ExamAnalyticsSummaryResponse> = {}): ExamA
       pctCorrect: null,
       pctWrong: null,
       pctEmpty: 25,
-      difficulty: null,
-      essay: { answered: 3, graded: 2, pending: 1, avgScore: 15, minScore: 10, maxScore: 20, maxPoint: 20 },
+      difficulty: 'Sedang',
+      essay: { answered: 3, graded: 2, pending: 1, avgScore: 15, minScore: 10, maxScore: 20, maxPoint: 20, scorePct: 50 },
     }),
   ];
   return {
@@ -666,12 +666,13 @@ test('Analisis: sheet Analisis Soal — teks lengkap, kolom Materi & kolom essay
     'Skor Min',
     'Skor Maks',
     'Poin Maks',
+    'Persentase Skor Essay (%)',
     'Menunggu Penilaian',
   ]);
   assert.deepEqual(s.rows, [
-    [1, 'Teks lengkap soal 1 tentang APD yang panjang.', 'Pilihan Ganda', 'APD', 4, 2, 1, 1, 50, 25, 'Sedang', '-', '-', '-', '-', '-'],
-    [2, 'Preview soal 2', 'Benar/Salah', '-', 4, 3, 1, 0, 75, 25, 'Sedang', '-', '-', '-', '-', '-'],
-    [3, 'Preview soal 3', 'Essay', 'APD', 4, '-', '-', 1, '-', '-', '-', 15, 10, 20, 20, 1],
+    [1, 'Teks lengkap soal 1 tentang APD yang panjang.', 'Pilihan Ganda', 'APD', 4, 2, 1, 1, 50, 25, 'Sedang', '-', '-', '-', '-', '-', '-'],
+    [2, 'Preview soal 2', 'Benar/Salah', '-', 4, 3, 1, 0, 75, 25, 'Sedang', '-', '-', '-', '-', '-', '-'],
+    [3, 'Preview soal 3', 'Essay', 'APD', 4, '-', '-', 1, '-', '-', 'Sedang', 15, 10, 20, 20, 50, 1],
   ]);
 
   // tanpa materi & tanpa essay → kolom tersebut tidak muncul
@@ -969,8 +970,8 @@ test('Detail Soal (essay / studi kasus): tanpa istilah benar/salah, rubrik & sta
       empty: 1,
       pctCorrect: null,
       pctWrong: null,
-      difficulty: null,
-      essay: { answered: 3, graded: 2, pending: 1, avgScore: 15, minScore: 10, maxScore: 20, maxPoint: 20 },
+      difficulty: 'Sedang',
+      essay: { answered: 3, graded: 2, pending: 1, avgScore: 15, minScore: 10, maxScore: 20, maxPoint: 20, scorePct: 50 },
     }),
     distribution: [],
     nonCorrectParticipants: [],
@@ -1000,6 +1001,8 @@ test('Detail Soal (essay / studi kasus): tanpa istilah benar/salah, rubrik & sta
       'Skor Min',
       'Skor Maks',
       'Poin Maks',
+      'Persentase Skor (%)',
+      'Indikasi Kesulitan',
       'Filter',
       'Data dihitung pada',
     ]
@@ -1010,8 +1013,10 @@ test('Detail Soal (essay / studi kasus): tanpa istilah benar/salah, rubrik & sta
   assert.equal(kv(info, 'Dijawab'), 3);
   assert.equal(kv(info, 'Rata-rata Skor'), 15);
   assert.equal(kv(info, 'Poin Maks'), 20);
+  assert.equal(kv(info, 'Persentase Skor (%)'), 50);
+  assert.equal(kv(info, 'Indikasi Kesulitan'), 'Sedang');
   assert.equal(kv(info, 'Filter'), 'Company: Semua; Department: IT; Periode: Sejak 01/10/2026 00:00 WIB');
-  for (const label of ['Benar', 'Salah', '% Benar', '% Salah', 'Jawaban Benar', 'Indikasi Kesulitan']) {
+  for (const label of ['Benar', 'Salah', '% Benar', '% Salah', 'Jawaban Benar']) {
     assert.ok(!hasLabel(info, label), `essay tanpa baris ${label}`);
   }
   for (const name of ['Distribusi Jawaban', 'Peserta yang Salah']) {

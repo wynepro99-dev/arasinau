@@ -75,7 +75,9 @@ export const ATTEMPT_BASIS_NOTE =
   'Total Attempt menghitung semua attempt, termasuk pengulangan.';
 
 export const DIFFICULTY_DISCLAIMER =
-  'Indikasi Tingkat Kesulitan dihitung dari persentase jawaban benar (benar ÷ total × 100). ' +
+  'Indikasi Tingkat Kesulitan: soal pilihan ganda / benar-salah dari persentase jawaban benar (benar ÷ total × 100); ' +
+  'soal essay / studi kasus dari persentase skor (total poin ÷ (jawaban dinilai + kosong) × poin maksimal × 100; ' +
+  'jawaban kosong bernilai 0, jawaban yang menunggu penilaian belum dihitung). ' +
   'Ini indikasi sederhana, bukan analisis psikometri formal.';
 
 export const MATERIAL_UNAVAILABLE_MESSAGE =
@@ -416,6 +418,11 @@ export interface EssayStat {
   minScore: number | null;
   maxScore: number | null;
   maxPoint: number;
+  /**
+   * Persentase skor = total poin (dinilai + kosong) ÷ ((dinilai + kosong) × poin maks) × 100, 2 desimal.
+   * Kosong bernilai 0; menunggu penilaian tidak dihitung. Dasar Indikasi Kesulitan essay / studi kasus.
+   */
+  scorePct: number | null;
 }
 
 export interface QuestionStat {
@@ -436,6 +443,7 @@ export interface QuestionStat {
   pctCorrect: number | null;
   pctWrong: number | null;
   pctEmpty: number | null;
+  /** Objektif: dari pctCorrect. Essay / studi kasus: dari essay.scorePct. null bila belum ada data. */
   difficulty: DifficultyLabel | null;
   /** Hanya essay / studi kasus. */
   essay: EssayStat | null;

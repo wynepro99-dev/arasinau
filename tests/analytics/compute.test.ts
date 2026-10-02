@@ -632,8 +632,9 @@ describe('computeSummary — paket utama tanpa filter', () => {
         pctCorrect: null,
         pctWrong: null,
         pctEmpty: 33.33,
-        difficulty: null,
-        essay: { answered: 6, graded: 4, pending: 2, avgScore: 14, minScore: 8, maxScore: 20, maxPoint: 20 },
+        // persentase skor: 56 poin ÷ ((4 dinilai + 3 kosong) × 20) = 40% → Sulit (2 menunggu tidak dihitung)
+        difficulty: 'Sulit',
+        essay: { answered: 6, graded: 4, pending: 2, avgScore: 14, minScore: 8, maxScore: 20, maxPoint: 20, scorePct: 40 },
         scoringMismatchCount: 0,
       },
       {
@@ -646,8 +647,9 @@ describe('computeSummary — paket utama tanpa filter', () => {
         pctCorrect: null,
         pctWrong: null,
         pctEmpty: 33.33,
-        difficulty: null,
-        essay: { answered: 6, graded: 3, pending: 3, avgScore: 10.67, minScore: 7, maxScore: 15, maxPoint: 20 },
+        // persentase skor: 32 poin ÷ ((3 dinilai + 3 kosong) × 20) = 26,67% → Sulit
+        difficulty: 'Sulit',
+        essay: { answered: 6, graded: 3, pending: 3, avgScore: 10.67, minScore: 7, maxScore: 15, maxPoint: 20, scorePct: 26.67 },
         scoringMismatchCount: 0,
       },
       {
@@ -890,6 +892,7 @@ describe('computeSummary — filter', () => {
       minScore: null,
       maxScore: null,
       maxPoint: 20,
+      scorePct: null,
     });
     assert.ok(s.distributions[Q.mc5].every((r) => r.count === 0 && r.pct === null));
     assert.ok(s.scoreDistribution.every((b) => b.count === 0));
@@ -1695,5 +1698,65 @@ describe('data asli exam_attempts.csv (invariant, tanpa mencetak data pribadi)',
       s.questions.reduce((a, q) => a + (q.correct ?? 0), 0)
     );
     assert.equal(computeErrorRows(ds, NO_FILTERS, ERROR_ROWS_LIMIT_MAX).total, wrongPlusEmpty);
+  });
+});
+
+describe('indikasi kesulitan essay / studi kasus (persentase skor)', () => {
+  const PENDING = 'Menunggu penilaian manual dari Admin.';
+  const examRow = { id: 'exam-skor', title: 'Paket Skor', scope: 'BANK', passing_score: 70 };
+  const questionRow = {
+    id: 'q-cs-1',
+    exam_id: 'exam-skor',
+    type: 'case_study',
+    question_text: 'Apa yang harus dilakukan AO?',
+    options: [],
+    correct_answer_id: 'essay',
+    points: 25,
+  };
+  const answer = (essayAnswer: string, pointsEarned: number, aiFeedback = '') => ({
+    'q-cs-1': { questionId: 'q-cs-1', selectedAnswerId: '', isCorrect: false, pointsEarned, essayAnswer, aiFeedback },
+  });
+  const attempt = (id: string, userId: string, answers: Record<string, unknown>) => ({
+    id,
+    exam_id: 'exam-skor',
+    user_id: userId,
+    user_name: userId,
+    score: 80,
+    passed: true,
+    completed_at: `2026-10-01T0${id.slice(-1)}:00:00.000Z`,
+    answers,
+  });
+  const datasetOf = (attemptRows: any[]) =>
+    buildDataset({ examRow, questionRows: [questionRow], attemptRows, userRows: [], loadedAt: '2026-10-02T00:00:00.000Z' });
+  const statOfCase = (attemptRows: any[]) => computeSummary(datasetOf(attemptRows), NO_FILTERS, CAPS).questions[0];
+
+  test('semua dinilai, nilai tinggi → Mudah (seperti data produksi 24,52 / 25)', () => {
+    const q = statOfCase([
+      attempt('a1', 'u1', answer('jawaban', 24)),
+      attempt('a2', 'u2', answer('jawaban', 25)),
+      attempt('a3', 'u3', answer('jawaban', 25)),
+      attempt('a4', 'u4', answer('jawaban', 0, PENDING)), // menunggu → tidak dihitung
+    ]);
+    assert.equal(q.essay?.scorePct, 98.67); // 74 ÷ (3 × 25)
+    assert.equal(q.difficulty, 'Mudah');
+    assert.equal(q.correct, null, 'essay tetap tanpa label benar/salah');
+    assert.equal(q.pctCorrect, null);
+  });
+
+  test('jawaban kosong dihitung 0 poin', () => {
+    const q = statOfCase([
+      attempt('a1', 'u1', answer('jawaban', 24)),
+      attempt('a2', 'u2', answer('jawaban', 25)),
+      attempt('a3', 'u3', answer('jawaban', 25)),
+      attempt('a4', 'u4', answer('', 0, 'Jawaban tidak diisi oleh peserta.')),
+    ]);
+    assert.equal(q.essay?.scorePct, 74); // 74 ÷ (4 × 25)
+    assert.equal(q.difficulty, 'Sedang');
+  });
+
+  test('semua masih menunggu penilaian → belum ada indikasi', () => {
+    const q = statOfCase([attempt('a1', 'u1', answer('jawaban', 0, PENDING))]);
+    assert.equal(q.essay?.scorePct, null);
+    assert.equal(q.difficulty, null);
   });
 });

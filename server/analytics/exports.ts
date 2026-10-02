@@ -520,6 +520,7 @@ export function buildAnalyticsWorkbook(input: {
           { header: 'Skor Min', width: 10 },
           { header: 'Skor Maks', width: 10 },
           { header: 'Poin Maks', width: 10 },
+          { header: 'Persentase Skor Essay (%)', width: 16 },
           { header: 'Menunggu Penilaian', width: 14 },
         ]
       : []),
@@ -540,8 +541,15 @@ export function buildAnalyticsWorkbook(input: {
       q.difficulty || '-',
       ...(hasEssay
         ? e
-          ? [numOrDash(e.avgScore), numOrDash(e.minScore), numOrDash(e.maxScore), numOrDash(e.maxPoint), e.pending]
-          : ['-', '-', '-', '-', '-']
+          ? [
+              numOrDash(e.avgScore),
+              numOrDash(e.minScore),
+              numOrDash(e.maxScore),
+              numOrDash(e.maxPoint),
+              numOrDash(e.scorePct),
+              e.pending,
+            ]
+          : ['-', '-', '-', '-', '-', '-']
         : []),
     ];
   });
@@ -731,7 +739,9 @@ export function buildQuestionDetailWorkbook(
       ['Rata-rata Skor', numOrDash(e?.avgScore)],
       ['Skor Min', numOrDash(e?.minScore)],
       ['Skor Maks', numOrDash(e?.maxScore)],
-      ['Poin Maks', numOrDash(e ? e.maxPoint : q.points)]
+      ['Poin Maks', numOrDash(e ? e.maxPoint : q.points)],
+      ['Persentase Skor (%)', numOrDash(e?.scorePct)],
+      ['Indikasi Kesulitan', stat.difficulty || '-']
     );
   }
   info.push(['Filter', describeFilters(detail.filters)], ['Data dihitung pada', formatDateTimeWIB(detail.generatedAt)]);

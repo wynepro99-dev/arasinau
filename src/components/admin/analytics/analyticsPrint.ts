@@ -71,7 +71,7 @@ export function describeFiltersText(f: AnalyticsFilters | null | undefined): str
 /** Batas Mudah / Sedang / Sulit (mengikuti DIFFICULTY_THRESHOLDS). */
 export function difficultyThresholdText(): string {
   const { easyMinPct: easy, mediumMinPct: medium } = DIFFICULTY_THRESHOLDS;
-  return `Batas: Mudah ≥ ${easy}% benar · Sedang ${medium}% sampai < ${easy}% · Sulit < ${medium}%.`;
+  return `Batas: Mudah ≥ ${easy}% · Sedang ${medium}% sampai < ${easy}% · Sulit < ${medium}%.`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -247,7 +247,7 @@ ${
     const objective = isObjectiveType(q.type);
     const essayHint =
       !objective && q.essay
-        ? html`<div class="hint">Rata-rata skor ${fmtNum(q.essay.avgScore, 2)} / ${fmtNum(q.essay.maxPoint)} · Dinilai ${fmtInt(q.essay.graded)} · Menunggu penilaian ${fmtInt(q.essay.pending)}</div>`
+        ? html`<div class="hint">Rata-rata skor ${fmtNum(q.essay.avgScore, 2)} / ${fmtNum(q.essay.maxPoint)} · min ${fmtNum(q.essay.minScore, 2)} · maks ${fmtNum(q.essay.maxScore, 2)} · Persentase skor ${fmtPct(q.essay.scorePct, 2)} · Dinilai ${fmtInt(q.essay.graded)} · Menunggu penilaian ${fmtInt(q.essay.pending)}</div>`
         : null;
     return html`<tr>
 <td class="num">${q.no}</td>
@@ -260,7 +260,7 @@ ${materiTd(q.materi)}
 <td class="num">${fmtInt(q.empty)}</td>
 <td class="num">${objective ? fmtPct(q.pctCorrect, 2) : '-'}</td>
 <td class="num">${objective ? fmtPct(q.pctWrong, 2) : '-'}</td>
-<td>${objective ? q.difficulty || '-' : '-'}</td>
+<td>${q.difficulty || '-'}</td>
 </tr>`;
   });
   const questionSection = report.questions.length

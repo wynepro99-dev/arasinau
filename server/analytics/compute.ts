@@ -471,6 +471,8 @@ interface QuestionAcc {
   gradedSum: number;
   gradedMin: number;
   gradedMax: number;
+  /** Essay / studi kasus: poin tersimpan pada jawaban kosong (normalnya 0). */
+  emptySum: number;
 }
 
 type Outcome = 'correct' | 'wrong' | 'empty' | 'pending' | 'graded';
@@ -541,6 +543,7 @@ function newAcc(meta: QuestionMeta): QuestionAcc {
     gradedSum: 0,
     gradedMin: Infinity,
     gradedMax: -Infinity,
+    emptySum: 0,
   };
 }
 
@@ -548,8 +551,10 @@ function addAnswer(meta: QuestionMeta, acc: QuestionAcc, ans: NormAnswer): void 
   const outcome = outcomeOf(meta.objective, ans);
   if (outcome === 'correct') acc.correct += 1;
   else if (outcome === 'wrong') acc.wrong += 1;
-  else if (outcome === 'empty') acc.empty += 1;
-  else if (outcome === 'pending') acc.pending += 1;
+  else if (outcome === 'empty') {
+    acc.empty += 1;
+    if (!meta.objective) acc.emptySum += ans.pointsEarned;
+  } else if (outcome === 'pending') acc.pending += 1;
   else {
     acc.graded += 1;
     acc.gradedSum += ans.pointsEarned;
@@ -612,6 +617,9 @@ function toQuestionStat(meta: QuestionMeta, acc: QuestionAcc): QuestionStat {
   const answered = acc.pending + acc.graded;
   const total = acc.empty + answered;
   const hasGraded = acc.graded > 0;
+  // Persentase skor: jawaban dinilai + kosong (kosong = 0 poin); yang menunggu penilaian belum dihitung.
+  const scoredCount = acc.graded + acc.empty;
+  const scorePct = q.points > 0 ? pct(acc.gradedSum + acc.emptySum, scoredCount * q.points) : null;
   return {
     ...base,
     total,
@@ -621,7 +629,7 @@ function toQuestionStat(meta: QuestionMeta, acc: QuestionAcc): QuestionStat {
     pctCorrect: null,
     pctWrong: null,
     pctEmpty: pct(acc.empty, total),
-    difficulty: null,
+    difficulty: difficultyFor(scorePct),
     essay: {
       answered,
       graded: acc.graded,
@@ -630,6 +638,7 @@ function toQuestionStat(meta: QuestionMeta, acc: QuestionAcc): QuestionStat {
       minScore: hasGraded ? round2(acc.gradedMin) : null,
       maxScore: hasGraded ? round2(acc.gradedMax) : null,
       maxPoint: q.points,
+      scorePct,
     },
     scoringMismatchCount: 0,
   };

@@ -232,11 +232,15 @@ function topWrongQuestions(list: QuestionStat[]): QuestionStat[] {
 }
 
 function essayHint(essay: EssayStat): string {
-  const parts = [
+  const parts =
     essay.avgScore === null
-      ? 'Belum ada jawaban yang dinilai'
-      : `Rata-rata ${fmtNum(essay.avgScore, 2)} / ${fmtNum(essay.maxPoint, 2)}`,
-  ];
+      ? ['Belum ada jawaban yang dinilai']
+      : [
+          `Rata-rata ${fmtNum(essay.avgScore, 2)} / ${fmtNum(essay.maxPoint, 2)}`,
+          `min ${fmtNum(essay.minScore, 2)}`,
+          `maks ${fmtNum(essay.maxScore, 2)}`,
+        ];
+  if (essay.scorePct !== null) parts.push(`skor ${fmtPct(essay.scorePct, 2)}`);
   if (essay.pending > 0) parts.push(`${fmtInt(essay.pending)} menunggu penilaian`);
   return parts.join(' · ');
 }
@@ -523,7 +527,20 @@ const QuestionAnalysisTable: React.FC<{
                       <td className={TD_NUM}>{fmtInt(q.empty)}</td>
                       <td className={TD_NUM}>{objective ? fmtPct(q.pctCorrect, 2) : DASH}</td>
                       <td className={TD_NUM}>{objective ? fmtPct(q.pctWrong, 2) : DASH}</td>
-                      <td className={TD}>{objective && q.difficulty ? <DifficultyBadge label={q.difficulty} /> : DASH}</td>
+                      <td className={TD}>
+                        {q.difficulty ? (
+                          <>
+                            <DifficultyBadge label={q.difficulty} />
+                            {!objective && q.essay?.scorePct != null && (
+                              <p className="mt-0.5 text-[10px] text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                                dari skor {fmtPct(q.essay.scorePct, 2)}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          DASH
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -532,9 +549,9 @@ const QuestionAnalysisTable: React.FC<{
           </div>
           <div className="mt-3">
             <InfoNote>
-              {DIFFICULTY_DISCLAIMER} Batas yang dipakai: Mudah ≥ {DIFFICULTY_THRESHOLDS.easyMinPct}% benar · Sedang{' '}
+              {DIFFICULTY_DISCLAIMER} Batas yang dipakai: Mudah ≥ {DIFFICULTY_THRESHOLDS.easyMinPct}% · Sedang{' '}
               {DIFFICULTY_THRESHOLDS.mediumMinPct}% sampai {'<'} {DIFFICULTY_THRESHOLDS.easyMinPct}% · Sulit {'<'}{' '}
-              {DIFFICULTY_THRESHOLDS.mediumMinPct}%. Soal essay / studi kasus tidak diberi indikasi kesulitan.
+              {DIFFICULTY_THRESHOLDS.mediumMinPct}%.
             </InfoNote>
           </div>
         </>

@@ -497,11 +497,16 @@ const EssayAnalysis: React.FC<{ data: QuestionDetailResponse }> = ({ data }) => 
           <StatTile label="Skor Terendah" value={fmtNum(essay?.minScore, 2)} />
           <StatTile label="Skor Tertinggi" value={fmtNum(essay?.maxScore, 2)} />
           <StatTile label="Poin Maksimal" value={fmtNum(maxPoint)} />
+          <StatTile label="Persentase Skor" value={pct2(essay?.scorePct ?? null)} hint="jawaban kosong = 0 poin" />
+          <StatTile label="Indikasi Tingkat Kesulitan" value={<DifficultyBadge label={stat.difficulty} />} />
         </div>
+        <p className="text-[10px] leading-relaxed text-slate-400 dark:text-zinc-500">
+          {DIFFICULTY_DISCLAIMER} {difficultyThresholdText()}
+        </p>
         {essay && essay.pending > 0 && (
           <InfoNote tone="warning">
-            {fmtInt(essay.pending)} jawaban masih menunggu penilaian manual. Rata-rata, skor terendah, dan skor tertinggi
-            hanya mencakup {fmtInt(essay.graded)} jawaban yang sudah dinilai.
+            {fmtInt(essay.pending)} jawaban masih menunggu penilaian manual. Rata-rata, skor terendah, skor tertinggi, dan
+            persentase skor hanya mencakup jawaban yang sudah dinilai (dan jawaban kosong).
           </InfoNote>
         )}
       </section>
